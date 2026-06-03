@@ -8,6 +8,7 @@ import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/send_mode.dart';
 import 'package:localsend_app/pages/selected_files_page.dart';
 import 'package:localsend_app/pages/tabs/send_tab_vm.dart';
+import 'package:localsend_app/pages/wifi_direct/wifi_direct_page.dart';
 import 'package:localsend_app/pages/troubleshoot_page.dart';
 import 'package:localsend_app/provider/animation_provider.dart';
 import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
@@ -198,6 +199,13 @@ class SendTab extends StatelessWidget {
                     ),
                     _SendModeButton(
                       onSelect: (mode) async => vm.onTapSendMode(context, mode),
+                    ),
+                    Tooltip(
+                      message: 'Direct Connect (no router)',
+                      child: CustomIconButton(
+                        onPressed: () => context.push(() => const WifiDirectPage()),
+                        child: const Icon(Icons.wifi_tethering),
+                      ),
                     ),
                   ],
                 ),
