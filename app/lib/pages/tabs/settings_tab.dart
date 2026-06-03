@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:common/constants.dart';
 import 'package:common/model/device.dart';
@@ -12,6 +13,9 @@ import 'package:localsend_app/pages/about/about_page.dart';
 import 'package:localsend_app/pages/changelog_page.dart';
 import 'package:localsend_app/pages/settings/signaling_server_page.dart';
 import 'package:localsend_app/provider/clipboard_sync_provider.dart';
+import 'package:localsend_app/provider/security_provider.dart';
+import 'package:localsend_app/provider/logging/audit_log_provider.dart';
+import 'package:localsend_app/pages/settings/audit_log_page.dart';
 import 'package:localsend_app/pages/donation/donation_page.dart';
 import 'package:localsend_app/pages/language_page.dart';
 import 'package:localsend_app/pages/settings/network_interfaces_page.dart';
@@ -452,6 +456,37 @@ class SettingsTab extends StatelessWidget {
                           },
                         ),
                       if (vm.advanced)
+                        Builder(builder: (context) {
+                          final fingerprint = context
+                              .watch(securityProvider)
+                              .certificateHash;
+                          return _SettingsEntry(
+                            label: 'Certificate Fingerprint',
+                            child: GestureDetector(
+                              onLongPress: () {
+                                Clipboard.setData(ClipboardData(text: fingerprint));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Fingerprint copied')),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).inputDecorationTheme.fillColor,
+                                  borderRadius: Theme.of(context).inputDecorationTheme.borderRadius,
+                                ),
+                                child: Text(
+                                  fingerprint.length > 16
+                                      ? '${fingerprint.substring(0, 8)}…${fingerprint.substring(fingerprint.length - 8)}'
+                                      : fingerprint,
+                                  style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      if (vm.advanced)
                         _SettingsEntry(
                           label: t.settingsTab.network.multicastGroup,
                           child: TextFieldTv(
@@ -523,6 +558,11 @@ class SettingsTab extends StatelessWidget {
                             ref.notifier(clipboardSyncProvider).disable();
                           }
                         },
+                      ),
+                      _ButtonEntry(
+                        label: 'Transfer Audit Log',
+                        buttonLabel: 'View',
+                        onTap: () => context.push(() => const AuditLogPage()),
                       ),
                     ],
                   ),

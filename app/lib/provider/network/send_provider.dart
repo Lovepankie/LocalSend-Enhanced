@@ -22,6 +22,7 @@ import 'package:localsend_app/provider/http_provider.dart';
 import 'package:localsend_app/provider/progress_provider.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/provider/logging/audit_log_provider.dart';
 import 'package:localsend_app/rust/api/http.dart' as rust_http;
 import 'package:localsend_app/rust/api/model.dart' as rust_model;
 import 'package:localsend_app/util/rust.dart';
@@ -527,6 +528,20 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
         fileError,
       ),
     );
+
+    // Audit log
+    final target = state[sessionId]?.target;
+    if (target != null) {
+      ref.notifier(auditLogProvider).log(AuditEntry(
+        timestamp: DateTime.now(),
+        direction: AuditDirection.sent,
+        peerAlias: target.alias,
+        fileName: file.file.fileName,
+        fileSize: file.file.size ?? 0,
+        success: fileError == null,
+        errorMessage: fileError,
+      ));
+    }
 
     if (isRetry) {
       final state = this.state[sessionId];
