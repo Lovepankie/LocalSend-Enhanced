@@ -36,6 +36,10 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Register WiFi Direct / SoftAP channel
+        WifiDirectPlugin.register(flutterEngine, this)
+
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             CHANNEL
