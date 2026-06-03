@@ -10,6 +10,7 @@ import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/persistence/color_mode.dart';
 import 'package:localsend_app/pages/about/about_page.dart';
 import 'package:localsend_app/pages/changelog_page.dart';
+import 'package:localsend_app/pages/settings/signaling_server_page.dart';
 import 'package:localsend_app/pages/donation/donation_page.dart';
 import 'package:localsend_app/pages/language_page.dart';
 import 'package:localsend_app/pages/settings/network_interfaces_page.dart';
@@ -486,6 +487,12 @@ class SettingsTab extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (vm.advanced)
+                        _ButtonEntry(
+                          label: 'Signaling Servers',
+                          buttonLabel: 'Configure',
+                          onTap: () => context.push(() => const SignalingServerPage()),
+                        ),
                     ],
                   ),
                   _SettingsSection(
