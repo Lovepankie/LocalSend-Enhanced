@@ -18,6 +18,7 @@ import 'package:localsend_app/provider/logging/audit_log_provider.dart';
 import 'package:localsend_app/pages/settings/audit_log_page.dart';
 import 'package:localsend_app/pages/settings/e2e_settings_page.dart';
 import 'package:localsend_app/provider/e2e_session_provider.dart';
+import 'package:localsend_app/pages/settings/hooks_page.dart';
 import 'package:localsend_app/pages/donation/donation_page.dart';
 import 'package:localsend_app/pages/language_page.dart';
 import 'package:localsend_app/pages/settings/network_interfaces_page.dart';
@@ -574,6 +575,11 @@ class SettingsTab extends StatelessWidget {
                           onTap: () => context.push(() => const E2ESettingsPage()),
                         );
                       }),
+                      _ButtonEntry(
+                        label: 'Receive Hooks',
+                        buttonLabel: 'Configure',
+                        onTap: () => context.push(() => const HooksPage()),
+                      ),
                     ],
                   ),
                   _SettingsSection(
