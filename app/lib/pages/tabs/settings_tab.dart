@@ -493,6 +493,20 @@ class SettingsTab extends StatelessWidget {
                           buttonLabel: 'Configure',
                           onTap: () => context.push(() => const SignalingServerPage()),
                         ),
+                      if (vm.advanced)
+                        _SettingsEntry(
+                          label: 'Parallel Uploads (${vm.settings.parallelUploads})',
+                          child: Slider(
+                            value: vm.settings.parallelUploads.toDouble(),
+                            min: 1,
+                            max: 5,
+                            divisions: 4,
+                            label: vm.settings.parallelUploads.toString(),
+                            onChanged: (v) async {
+                              await ref.notifier(settingsProvider).setParallelUploads(v.round());
+                            },
+                          ),
+                        ),
                     ],
                   ),
                   _SettingsSection(

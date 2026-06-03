@@ -90,6 +90,7 @@ const _deviceType = 'ls_device_type';
 const _deviceModel = 'ls_device_model';
 const _shareViaLinkAutoAccept = 'ls_share_via_link_auto_accept';
 const _advancedSettingsKey = 'ls_advanced_settings';
+const _parallelUploadsKey = 'ls_parallel_uploads';
 
 final persistenceProvider = Provider<PersistenceService>((ref) {
   throw Exception('persistenceProvider not initialized');
@@ -325,6 +326,14 @@ class PersistenceService {
 
   Future<void> setPort(int port) async {
     await _prefs.setInt(_portKey, port);
+  }
+
+  int getParallelUploads() {
+    return _prefs.getInt(_parallelUploadsKey) ?? 2;
+  }
+
+  Future<void> setParallelUploads(int count) async {
+    await _prefs.setInt(_parallelUploadsKey, count.clamp(1, 5));
   }
 
   List<String>? getNetworkWhitelist() {

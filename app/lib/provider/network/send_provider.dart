@@ -381,8 +381,23 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
 
   final uriContent = UriContent();
 
-  /// Sends a file.
-  /// Returns true, if the next file should be sent.
+  static const _maxAutoRetries = 3;
+  static const _retryBaseDelayMs = 1000;
+
+  /// Returns true if an error message indicates a transient network problem
+  /// that is safe to retry (connection refused, timeout, reset, etc.).
+  static bool _isTransientError(String errorMsg) {
+    final lower = errorMsg.toLowerCase();
+    return lower.contains('connection') ||
+        lower.contains('timeout') ||
+        lower.contains('reset') ||
+        lower.contains('refused') ||
+        lower.contains('broken pipe') ||
+        lower.contains('network');
+  }
+
+  /// Sends a file with automatic retry on transient network errors.
+  /// Returns true if the next file should be sent.
   Future<bool> sendFile({
     required String sessionId,
     required int isolateIndex,
@@ -400,12 +415,8 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
       return false;
     }
 
-    final remoteSessionId = state[sessionId]!.remoteSessionId;
-    final target = state[sessionId]!.target;
-
     if (isRetry) {
       _logger.info('Retrying ${file.file.fileName}');
-
       state = state.updateSession(
         sessionId: sessionId,
         state: (s) => s?.copyWith(
@@ -422,75 +433,99 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
       _logger.info('Sending ${file.file.fileName}');
     }
 
-    state = state.updateSession(
-      sessionId: sessionId,
-      state: (s) => s?.withFileStatus(file.file.id, FileStatus.sending, null),
-    );
+    String? fileError;
 
-    final taskResult = ref
-        .redux(parentIsolateProvider)
-        .dispatchTakeResult(
-          IsolateHttpUploadAction(
-            isolateIndex: isolateIndex,
-            remoteSessionId: remoteSessionId,
-            remoteFileToken: token,
-            fileId: file.file.id,
-            filePath: file.path,
-            fileBytes: file.bytes,
-            mime: file.file.lookupMime(),
-            fileSize: file.file.size,
-            device: target,
+    for (int attempt = 0; attempt <= _maxAutoRetries; attempt++) {
+      if (attempt > 0) {
+        final delayMs = _retryBaseDelayMs * (1 << (attempt - 1)); // 1s, 2s, 4s
+        _logger.info('Auto-retry attempt $attempt for ${file.file.fileName} in ${delayMs}ms');
+        await Future.delayed(Duration(milliseconds: delayMs));
+
+        // Re-check session is still active before retrying
+        final currentStatus = state[sessionId]?.status;
+        if (currentStatus == null || !allowedStates.contains(currentStatus)) {
+          return false;
+        }
+      }
+
+      final remoteSessionId = state[sessionId]!.remoteSessionId;
+      final target = state[sessionId]!.target;
+
+      state = state.updateSession(
+        sessionId: sessionId,
+        state: (s) => s?.withFileStatus(file.file.id, FileStatus.sending, null),
+      );
+
+      final taskResult = ref
+          .redux(parentIsolateProvider)
+          .dispatchTakeResult(
+            IsolateHttpUploadAction(
+              isolateIndex: isolateIndex,
+              remoteSessionId: remoteSessionId,
+              remoteFileToken: token,
+              fileId: file.file.id,
+              filePath: file.path,
+              fileBytes: file.bytes,
+              mime: file.file.lookupMime(),
+              fileSize: file.file.size,
+              device: target,
+            ),
+          );
+
+      fileError = null;
+      try {
+        state = state.updateSession(
+          sessionId: sessionId,
+          state: (s) => s?.copyWith(
+            sendingTasks: [
+              ...?s.sendingTasks,
+              SendingTask(isolateIndex: isolateIndex, taskId: taskResult.taskId),
+            ],
           ),
         );
 
-    String? fileError;
-    try {
-      state = state.updateSession(
-        sessionId: sessionId,
-        state: (s) => s?.copyWith(
-          sendingTasks: [
-            ...?s.sendingTasks,
-            SendingTask(
-              isolateIndex: isolateIndex,
-              taskId: taskResult.taskId,
-            ),
-          ],
-        ),
-      );
-
-      await for (final progress in taskResult.progress) {
-        ref
-            .notifier(progressProvider)
-            .setProgress(
-              sessionId: sessionId,
-              fileId: file.file.id,
-              progress: progress,
-            );
-      }
-
-      // set progress to 100% when successfully finished
-      ref
-          .notifier(progressProvider)
-          .setProgress(
+        await for (final progress in taskResult.progress) {
+          ref.notifier(progressProvider).setProgress(
             sessionId: sessionId,
             fileId: file.file.id,
-            progress: 1,
+            progress: progress,
           );
-    } catch (e, st) {
-      fileError = e.humanErrorMessage;
-      _logger.warning('Error while sending file ${file.file.fileName}', e, st);
-    } finally {
-      state = state.updateSession(
-        sessionId: sessionId,
-        state: (s) => s?.copyWith(
-          sendingTasks: s.sendingTasks?.where((task) => !(task.isolateIndex == isolateIndex && task.taskId == taskResult.taskId)).toList(),
-        ),
-      );
+        }
+
+        ref.notifier(progressProvider).setProgress(
+          sessionId: sessionId,
+          fileId: file.file.id,
+          progress: 1,
+        );
+
+        break; // success — exit retry loop
+      } catch (e, st) {
+        fileError = e.humanErrorMessage;
+        _logger.warning('Error sending ${file.file.fileName} (attempt ${attempt + 1})', e, st);
+
+        // Only auto-retry on transient errors and if we have attempts left
+        if (attempt >= _maxAutoRetries || !_isTransientError(fileError)) {
+          break;
+        }
+      } finally {
+        state = state.updateSession(
+          sessionId: sessionId,
+          state: (s) => s?.copyWith(
+            sendingTasks: s.sendingTasks
+                ?.where((task) => !(task.isolateIndex == isolateIndex && task.taskId == taskResult.taskId))
+                .toList(),
+          ),
+        );
+      }
     }
 
     state = state.updateSession(
       sessionId: sessionId,
-      state: (s) => s?.withFileStatus(file.file.id, fileError != null ? FileStatus.failed : FileStatus.finished, fileError),
+      state: (s) => s?.withFileStatus(
+        file.file.id,
+        fileError != null ? FileStatus.failed : FileStatus.finished,
+        fileError,
+      ),
     );
 
     if (isRetry) {

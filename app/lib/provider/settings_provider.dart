@@ -70,6 +70,7 @@ class SettingsService extends PureNotifier<SettingsState> {
     shareViaLinkAutoAccept: _persistence.getShareViaLinkAutoAccept(),
     discoveryTimeout: _persistence.getDiscoveryTimeout(),
     advancedSettings: _persistence.getAdvancedSettingsEnabled(),
+    parallelUploads: _persistence.getParallelUploads(),
   );
 
   Future<void> setAlias(String alias) async {
@@ -133,6 +134,11 @@ class SettingsService extends PureNotifier<SettingsState> {
     state = state.copyWith(
       discoveryTimeout: timeout,
     );
+  }
+
+  Future<void> setParallelUploads(int count) async {
+    await _persistence.setParallelUploads(count);
+    state = state.copyWith(parallelUploads: count.clamp(1, 5));
   }
 
   Future<void> setMulticastGroup(String group) async {

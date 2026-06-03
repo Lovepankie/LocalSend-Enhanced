@@ -2,6 +2,8 @@ import 'dart:convert' show jsonDecode, utf8;
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:localsend_app/model/persistence/receive_history_entry.dart';
+
 import 'package:common/model/file_type.dart';
 import 'package:localsend_app/model/cross_file.dart';
 import 'package:localsend_app/util/file_path_helper.dart';
@@ -361,5 +363,43 @@ class ClearSelectionAction extends ReduxAction<SelectedSendingFilesNotifier, Lis
   @override
   void after() {
     global.dispatchAsync(ClearCacheAction()); // ignore: discarded_futures
+  }
+}
+
+/// Loads a previously received file from history into the send selection.
+/// Only works if the file still exists on disk.
+class ReSendFromHistoryAction extends AsyncReduxAction<SelectedSendingFilesNotifier, List<CrossFile>> {
+  final ReceiveHistoryEntry entry;
+
+  ReSendFromHistoryAction({required this.entry});
+
+  @override
+  Future<List<CrossFile>> reduce() async {
+    final path = entry.path;
+    if (path == null || entry.isMessage) return state;
+
+    final file = File(path);
+    if (!file.existsSync()) {
+      _logger.warning('Re-send failed: file no longer exists at $path');
+      return state;
+    }
+
+    final stat = await file.stat();
+    final crossFile = CrossFile(
+      name: entry.fileName,
+      fileType: entry.fileType,
+      size: stat.size,
+      thumbnail: null,
+      asset: null,
+      path: path,
+      bytes: null,
+      lastModified: stat.modified,
+      lastAccessed: stat.accessed,
+    );
+
+    final alreadySelected = state.any((f) => f.isSameFile(otherFile: crossFile));
+    if (alreadySelected) return state;
+
+    return List.unmodifiable([...state, crossFile]);
   }
 }
