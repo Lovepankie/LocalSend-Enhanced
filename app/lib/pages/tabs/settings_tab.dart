@@ -11,6 +11,7 @@ import 'package:localsend_app/model/persistence/color_mode.dart';
 import 'package:localsend_app/pages/about/about_page.dart';
 import 'package:localsend_app/pages/changelog_page.dart';
 import 'package:localsend_app/pages/settings/signaling_server_page.dart';
+import 'package:localsend_app/provider/clipboard_sync_provider.dart';
 import 'package:localsend_app/pages/donation/donation_page.dart';
 import 'package:localsend_app/pages/language_page.dart';
 import 'package:localsend_app/pages/settings/network_interfaces_page.dart';
@@ -507,6 +508,22 @@ class SettingsTab extends StatelessWidget {
                             },
                           ),
                         ),
+                    ],
+                  ),
+                  _SettingsSection(
+                    title: 'Extras',
+                    children: [
+                      _BooleanEntry(
+                        label: 'Clipboard Sync',
+                        value: context.watch(clipboardSyncProvider).enabled,
+                        onChanged: (enabled) {
+                          if (enabled) {
+                            ref.notifier(clipboardSyncProvider).enable();
+                          } else {
+                            ref.notifier(clipboardSyncProvider).disable();
+                          }
+                        },
+                      ),
                     ],
                   ),
                   _SettingsSection(
