@@ -14,7 +14,7 @@ import 'package:refena/refena.dart';
 
 part 'parent_isolate_provider.mapper.dart';
 
-const _uploadIsolateCount = 2;
+const _defaultUploadIsolateCount = 2;
 
 /// Holds the state of the parent isolate that is visible in the main Flutter isolate.
 /// The [ParentIsolateState.syncState] is synchronized with all child isolates.
@@ -68,8 +68,12 @@ class IsolateSetupAction extends AsyncReduxAction<IsolateController, ParentIsola
   /// If provided, file paths starting with "content://" will be resolved using this resolver.
   final UriContentStreamResolver? uriContentStreamResolver;
 
+  /// Number of concurrent upload isolates. Defaults to [_defaultUploadIsolateCount].
+  final int uploadIsolateCount;
+
   IsolateSetupAction({
     required this.uriContentStreamResolver,
+    this.uploadIsolateCount = _defaultUploadIsolateCount,
   });
 
   @override
@@ -91,7 +95,7 @@ class IsolateSetupAction extends AsyncReduxAction<IsolateController, ParentIsola
     );
 
     final httpUploadIsolates = List.generate(
-      _uploadIsolateCount,
+      uploadIsolateCount,
       (index) async {
         final httpUpload = await startIsolate<IsolateTaskStreamResult<double>, SendToIsolateData<IsolateTask<BaseHttpUploadTask>>, InitialData>(
           task: setupHttpUploadIsolate,
