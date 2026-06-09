@@ -34,9 +34,21 @@ object WifiDirectPlugin {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "startHotspot" -> handleStartHotspot(context, result)
+                    "startHotspot" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            handleStartHotspot(context, result)
+                        } else {
+                            result.error("UNSUPPORTED", "WiFi hotspot requires Android 8.0 (API 26) or higher", null)
+                        }
+                    }
                     "stopHotspot"  -> handleStopHotspot(result)
-                    "joinHotspot"  -> handleJoinHotspot(context, call, result)
+                    "joinHotspot"  -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            handleJoinHotspot(context, call, result)
+                        } else {
+                            result.error("UNSUPPORTED", "Joining hotspot requires Android 10 (API 29) or higher", null)
+                        }
+                    }
                     "leaveHotspot" -> handleLeaveHotspot(context, result)
                     else           -> result.notImplemented()
                 }
