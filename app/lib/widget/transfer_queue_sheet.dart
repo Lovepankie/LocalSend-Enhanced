@@ -37,7 +37,10 @@ class TransferQueueSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
@@ -52,12 +55,15 @@ class TransferQueueSheet extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  if (queue.items.any((i) =>
-                      i.status == QueuedTransferStatus.done ||
-                      i.status == QueuedTransferStatus.failed))
+                  if (queue.items.any(
+                    (i) =>
+                        i.status == QueuedTransferStatus.done ||
+                        i.status == QueuedTransferStatus.failed,
+                  ))
                     TextButton(
-                      onPressed: () =>
-                          context.notifier(transferQueueProvider).clearFinished(),
+                      onPressed: () => context
+                          .notifier(transferQueueProvider)
+                          .clearFinished(),
                       child: const Text('Clear done'),
                     ),
                   const SizedBox(width: 8),
@@ -90,9 +96,15 @@ class _QueueItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final (icon, color) = switch (item.status) {
       QueuedTransferStatus.waiting => (Icons.schedule, Colors.grey),
-      QueuedTransferStatus.sending => (Icons.upload, Theme.of(context).colorScheme.primary),
+      QueuedTransferStatus.sending => (
+        Icons.upload,
+        Theme.of(context).colorScheme.primary,
+      ),
       QueuedTransferStatus.done => (Icons.check_circle, Colors.green),
-      QueuedTransferStatus.failed => (Icons.error_outline, Theme.of(context).colorScheme.error),
+      QueuedTransferStatus.failed => (
+        Icons.error_outline,
+        Theme.of(context).colorScheme.error,
+      ),
     };
 
     return ListTile(
@@ -103,7 +115,11 @@ class _QueueItem extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(icon, color: color),
-      title: Text(item.target.alias, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        item.target.alias,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       subtitle: Text(
         item.status == QueuedTransferStatus.failed
             ? item.errorMessage ?? 'Failed'

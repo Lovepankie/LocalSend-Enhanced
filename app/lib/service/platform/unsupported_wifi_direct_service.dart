@@ -10,7 +10,9 @@ class UnsupportedWifiDirectService implements WifiDirectService {
 
   @override
   Future<HotspotCredentials> startHotspot() async {
-    throw const WifiDirectException('WiFi Direct is not supported on this platform.');
+    throw const WifiDirectException(
+      'WiFi Direct is not supported on this platform.',
+    );
   }
 
   @override
@@ -18,7 +20,9 @@ class UnsupportedWifiDirectService implements WifiDirectService {
 
   @override
   Future<void> joinHotspot(HotspotCredentials credentials) async {
-    throw const WifiDirectException('WiFi Direct is not supported on this platform.');
+    throw const WifiDirectException(
+      'WiFi Direct is not supported on this platform.',
+    );
   }
 
   @override

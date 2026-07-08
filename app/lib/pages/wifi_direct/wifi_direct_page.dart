@@ -134,9 +134,9 @@ class _IdleView extends StatelessWidget {
 
   Future<void> _openQrScanner(BuildContext context) async {
     // Navigate to QR scanner sub-page.
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const _QrScannerPage()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const _QrScannerPage()));
   }
 }
 
@@ -261,10 +261,7 @@ class _ConnectedView extends StatelessWidget {
           children: [
             const Icon(Icons.check_circle, color: Colors.green, size: 80),
             const SizedBox(height: 16),
-            Text(
-              'Connected!',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text('Connected!', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               'You are connected to ${state.credentials?.ssid ?? "the hotspot"}. '
@@ -337,7 +334,10 @@ class _ManualEntryForm extends StatefulWidget {
   final Future<void> Function(HotspotCredentials) onCredentials;
   final bool processing;
 
-  const _ManualEntryForm({required this.onCredentials, required this.processing});
+  const _ManualEntryForm({
+    required this.onCredentials,
+    required this.processing,
+  });
 
   @override
   State<_ManualEntryForm> createState() => _ManualEntryFormState();
@@ -393,7 +393,8 @@ class _ManualEntryFormState extends State<_ManualEntryForm> {
                 },
           icon: widget.processing
               ? const SizedBox(
-                  width: 16, height: 16,
+                  width: 16,
+                  height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.wifi),

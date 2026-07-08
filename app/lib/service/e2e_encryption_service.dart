@@ -52,7 +52,9 @@ class E2EEncryptionService {
 
     final expectedMac = _computeMac(key, ciphertext);
     if (!_constantTimeEquals(mac, expectedMac)) {
-      throw const E2EDecryptionException('MAC verification failed — wrong passphrase or tampered data');
+      throw const E2EDecryptionException(
+        'MAC verification failed — wrong passphrase or tampered data',
+      );
     }
 
     final keystream = _generateKeystream(key, ciphertext.length);
@@ -83,9 +85,10 @@ class E2EEncryptionService {
     final stream = <int>[];
     var counter = 0;
     while (stream.length < length) {
-      final block = Hmac(sha256, key)
-          .convert(utf8.encode('keystream:$counter'))
-          .bytes;
+      final block = Hmac(
+        sha256,
+        key,
+      ).convert(utf8.encode('keystream:$counter')).bytes;
       stream.addAll(block);
       counter++;
     }

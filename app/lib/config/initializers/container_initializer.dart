@@ -72,12 +72,14 @@ Future<RefenaContainer> initContainer({
     }),
   );
 
-  await container.redux(parentIsolateProvider).dispatchAsync(
-    IsolateSetupAction(
-      uriContentStreamResolver: AndroidUriContentStreamResolver(),
-      uploadIsolateCount: persistence.getParallelUploads(),
-    ),
-  );
+  await container
+      .redux(parentIsolateProvider)
+      .dispatchAsync(
+        IsolateSetupAction(
+          uriContentStreamResolver: AndroidUriContentStreamResolver(),
+          uploadIsolateCount: persistence.getParallelUploads(),
+        ),
+      );
 
   return container;
 }

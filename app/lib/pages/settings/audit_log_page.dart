@@ -21,10 +21,18 @@ class AuditLogPage extends StatelessWidget {
                 context: context,
                 builder: (_) => AlertDialog(
                   title: const Text('Clear Audit Log?'),
-                  content: const Text('All transfer records will be deleted. This cannot be undone.'),
+                  content: const Text(
+                    'All transfer records will be deleted. This cannot be undone.',
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Clear')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Clear'),
+                    ),
                   ],
                 ),
               );
@@ -54,13 +62,12 @@ class _AuditTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSent = entry.direction == AuditDirection.sent;
-    final color = entry.success ? Colors.green : Theme.of(context).colorScheme.error;
+    final color = entry.success
+        ? Colors.green
+        : Theme.of(context).colorScheme.error;
 
     return ListTile(
-      leading: Icon(
-        isSent ? Icons.upload : Icons.download,
-        color: color,
-      ),
+      leading: Icon(isSent ? Icons.upload : Icons.download, color: color),
       title: Text(entry.fileName, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         '${isSent ? "To" : "From"} ${entry.peerAlias} · '
@@ -72,7 +79,11 @@ class _AuditTile extends StatelessWidget {
           ? const Icon(Icons.check, color: Colors.green, size: 18)
           : Tooltip(
               message: entry.errorMessage ?? 'Failed',
-              child: Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 18),
+              child: Icon(
+                Icons.error_outline,
+                color: Theme.of(context).colorScheme.error,
+                size: 18,
+              ),
             ),
     );
   }
@@ -80,7 +91,8 @@ class _AuditTile extends StatelessWidget {
   String _formatSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
     return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(2)} GB';
   }
 

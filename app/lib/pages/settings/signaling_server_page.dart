@@ -30,7 +30,9 @@ class _SignalingServerPageState extends State<SignalingServerPage> {
         .map((s) => TextEditingController(text: s))
         .toList();
     if (_signalingControllers.isEmpty) {
-      _signalingControllers.add(TextEditingController(text: _defaultSignalingServer));
+      _signalingControllers.add(
+        TextEditingController(text: _defaultSignalingServer),
+      );
     }
     if (_stunControllers.isEmpty) {
       _stunControllers.add(TextEditingController(text: _defaultStunServer));
@@ -74,7 +76,9 @@ class _SignalingServerPageState extends State<SignalingServerPage> {
 
   void _resetToDefaults() {
     setState(() {
-      _signalingControllers = [TextEditingController(text: _defaultSignalingServer)];
+      _signalingControllers = [
+        TextEditingController(text: _defaultSignalingServer),
+      ];
       _stunControllers = [TextEditingController(text: _defaultStunServer)];
     });
   }
@@ -85,10 +89,7 @@ class _SignalingServerPageState extends State<SignalingServerPage> {
       appBar: AppBar(
         title: const Text('Signaling Servers'),
         actions: [
-          TextButton(
-            onPressed: _resetToDefaults,
-            child: const Text('Reset'),
-          ),
+          TextButton(onPressed: _resetToDefaults, child: const Text('Reset')),
         ],
       ),
       body: ListView(
@@ -98,13 +99,15 @@ class _SignalingServerPageState extends State<SignalingServerPage> {
             title: 'Signaling Servers (WSS)',
             hint: 'Used for cross-network device discovery via WebRTC.',
           ),
-          ..._signalingControllers.asMap().entries.map((e) => _ServerField(
-                controller: e.value,
-                label: 'Server ${e.key + 1}',
-                onRemove: _signalingControllers.length > 1
-                    ? () => setState(() => _signalingControllers.removeAt(e.key))
-                    : null,
-              )),
+          ..._signalingControllers.asMap().entries.map(
+            (e) => _ServerField(
+              controller: e.value,
+              label: 'Server ${e.key + 1}',
+              onRemove: _signalingControllers.length > 1
+                  ? () => setState(() => _signalingControllers.removeAt(e.key))
+                  : null,
+            ),
+          ),
           TextButton.icon(
             onPressed: () => setState(
               () => _signalingControllers.add(TextEditingController()),
@@ -117,17 +120,18 @@ class _SignalingServerPageState extends State<SignalingServerPage> {
             title: 'STUN Servers',
             hint: 'Used for NAT traversal in WebRTC connections.',
           ),
-          ..._stunControllers.asMap().entries.map((e) => _ServerField(
-                controller: e.value,
-                label: 'STUN ${e.key + 1}',
-                onRemove: _stunControllers.length > 1
-                    ? () => setState(() => _stunControllers.removeAt(e.key))
-                    : null,
-              )),
-          TextButton.icon(
-            onPressed: () => setState(
-              () => _stunControllers.add(TextEditingController()),
+          ..._stunControllers.asMap().entries.map(
+            (e) => _ServerField(
+              controller: e.value,
+              label: 'STUN ${e.key + 1}',
+              onRemove: _stunControllers.length > 1
+                  ? () => setState(() => _stunControllers.removeAt(e.key))
+                  : null,
             ),
+          ),
+          TextButton.icon(
+            onPressed: () =>
+                setState(() => _stunControllers.add(TextEditingController())),
             icon: const Icon(Icons.add),
             label: const Text('Add STUN Server'),
           ),
@@ -135,7 +139,11 @@ class _SignalingServerPageState extends State<SignalingServerPage> {
           FilledButton(
             onPressed: _saving ? null : _save,
             child: _saving
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Text('Save & Reconnect'),
           ),
         ],

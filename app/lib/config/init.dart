@@ -83,10 +83,14 @@ Future<void> postInit(BuildContext context, Ref ref, bool appStart) async {
   }
 
   try {
-    ref.redux(nearbyDevicesProvider).dispatchAsync(StartMulticastListener()); // ignore: unawaited_futures
+    ref
+        .redux(nearbyDevicesProvider)
+        .dispatchAsync(StartMulticastListener()); // ignore: unawaited_futures
   } catch (e) {
     _logger.warning('Starting multicast listener failed', e);
-    ref.notifier(networkErrorProvider).addWarning('Multicast discovery unavailable: $e');
+    ref
+        .notifier(networkErrorProvider)
+        .addWarning('Multicast discovery unavailable: $e');
   }
 
   ref.redux(signalingProvider).dispatch(SetupSignalingConnection());
@@ -94,20 +98,28 @@ Future<void> postInit(BuildContext context, Ref ref, bool appStart) async {
   if (appStart) {
     if (defaultTargetPlatform == TargetPlatform.macOS) {
       pendingFilesStream.listen((files) async {
-        await ref.global.dispatchAsync(_HandleAppStartArgumentsAction(args: files));
+        await ref.global.dispatchAsync(
+          _HandleAppStartArgumentsAction(args: files),
+        );
       });
 
       pendingStringsStream.listen((pendingStrings) {
         for (final string in pendingStrings) {
-          ref.redux(selectedSendingFilesProvider).dispatch(AddMessageAction(message: string));
+          ref
+              .redux(selectedSendingFilesProvider)
+              .dispatch(AddMessageAction(message: string));
         }
-        ref.redux(homePageControllerProvider).dispatch(ChangeTabAction(HomeTab.send));
+        ref
+            .redux(homePageControllerProvider)
+            .dispatch(ChangeTabAction(HomeTab.send));
       });
 
       await setupMethodCallHandler();
     } else {
       final args = ref.read(appArgumentsProvider);
-      await ref.global.dispatchAsync(_HandleAppStartArgumentsAction(args: args));
+      await ref.global.dispatchAsync(
+        _HandleAppStartArgumentsAction(args: args),
+      );
     }
   }
 
@@ -121,17 +133,25 @@ Future<void> postInit(BuildContext context, Ref ref, bool appStart) async {
       if (initialSharedPayload != null) {
         hasInitialShare = true;
         // ignore: unawaited_futures
-        ref.global.dispatchAsync(_HandleShareIntentAction(payload: initialSharedPayload));
+        ref.global.dispatchAsync(
+          _HandleShareIntentAction(payload: initialSharedPayload),
+        );
       }
     }
 
     _sharedMediaSubscription?.cancel(); // ignore: unawaited_futures
-    _sharedMediaSubscription = shareHandler.sharedMediaStream.listen((SharedMedia payload) async {
-      await ref.global.dispatchAsync(_HandleShareIntentAction(payload: payload));
+    _sharedMediaSubscription = shareHandler.sharedMediaStream.listen((
+      SharedMedia payload,
+    ) async {
+      await ref.global.dispatchAsync(
+        _HandleShareIntentAction(payload: payload),
+      );
     });
   }
 
-  if (appStart && !hasInitialShare && (checkPlatformWithGallery() || checkPlatformCanReceiveShareIntent())) {
+  if (appStart &&
+      !hasInitialShare &&
+      (checkPlatformWithGallery() || checkPlatformCanReceiveShareIntent())) {
     ref.global.dispatchAsync(ClearCacheAction()); // ignore: unawaited_futures
   }
 
@@ -152,15 +172,25 @@ class _HandleShareIntentAction extends AsyncGlobalAction {
   Future<void> reduce() async {
     final message = payload.content;
     if (message != null && message.trim().isNotEmpty) {
-      ref.redux(selectedSendingFilesProvider).dispatch(AddMessageAction(message: message));
+      ref
+          .redux(selectedSendingFilesProvider)
+          .dispatch(AddMessageAction(message: message));
     }
-    await ref.redux(selectedSendingFilesProvider).dispatchAsync(
-      AddFilesAction(
-        files: payload.attachments?.where((a) => a != null).cast<SharedAttachment>() ?? <SharedAttachment>[],
-        converter: CrossFileConverters.convertSharedAttachment,
-      ),
-    );
-    ref.redux(homePageControllerProvider).dispatch(ChangeTabAction(HomeTab.send));
+    await ref
+        .redux(selectedSendingFilesProvider)
+        .dispatchAsync(
+          AddFilesAction(
+            files:
+                payload.attachments
+                    ?.where((a) => a != null)
+                    .cast<SharedAttachment>() ??
+                <SharedAttachment>[],
+            converter: CrossFileConverters.convertSharedAttachment,
+          ),
+        );
+    ref
+        .redux(homePageControllerProvider)
+        .dispatch(ChangeTabAction(HomeTab.send));
   }
 }
 
@@ -175,7 +205,9 @@ class _HandleAppStartArgumentsAction extends AsyncGlobalAction {
         .redux(selectedSendingFilesProvider)
         .dispatchAsyncTakeResult(LoadSelectionFromArgsAction(args));
     if (filesAdded) {
-      ref.redux(homePageControllerProvider).dispatch(ChangeTabAction(HomeTab.send));
+      ref
+          .redux(homePageControllerProvider)
+          .dispatch(ChangeTabAction(HomeTab.send));
     }
   }
 }

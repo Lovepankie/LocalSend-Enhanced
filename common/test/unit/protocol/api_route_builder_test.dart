@@ -42,11 +42,17 @@ void main() {
     });
 
     test('v2 prepareUpload path is correct', () {
-      expect(ApiRoute.prepareUpload.v2, equals('/api/localsend/v2/prepare-upload'));
+      expect(
+        ApiRoute.prepareUpload.v2,
+        equals('/api/localsend/v2/prepare-upload'),
+      );
     });
 
     test('v1 prepareUpload uses legacy "send-request" path', () {
-      expect(ApiRoute.prepareUpload.v1, equals('/api/localsend/v1/send-request'));
+      expect(
+        ApiRoute.prepareUpload.v1,
+        equals('/api/localsend/v1/send-request'),
+      );
     });
   });
 

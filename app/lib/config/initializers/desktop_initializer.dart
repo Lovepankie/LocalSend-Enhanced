@@ -65,7 +65,8 @@ Future<DesktopInitResult?> initDesktop(
   if (args.contains(startHiddenFlag)) {
     startHidden = true;
   } else if (defaultTargetPlatform == TargetPlatform.macOS) {
-    startHidden = await isLaunchedAsLoginItem() && await getLaunchAtLoginMinimized();
+    startHidden =
+        await isLaunchedAsLoginItem() && await getLaunchAtLoginMinimized();
   }
 
   if (defaultTargetPlatform == TargetPlatform.macOS) {

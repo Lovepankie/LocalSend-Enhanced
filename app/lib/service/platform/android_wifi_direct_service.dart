@@ -15,9 +15,13 @@ class AndroidWifiDirectService implements WifiDirectService {
   @override
   Future<HotspotCredentials> startHotspot() async {
     try {
-      final result = await _channel.invokeMapMethod<String, String>('startHotspot');
+      final result = await _channel.invokeMapMethod<String, String>(
+        'startHotspot',
+      );
       if (result == null) {
-        throw const WifiDirectException('No hotspot credentials returned from platform');
+        throw const WifiDirectException(
+          'No hotspot credentials returned from platform',
+        );
       }
       return HotspotCredentials(
         ssid: result['ssid']!,

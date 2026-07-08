@@ -10,8 +10,8 @@ const _hooksKey = 'ls_receive_hooks';
 
 final pluginHookProvider =
     NotifierProvider<PluginHookNotifier, List<ReceiveHook>>((ref) {
-  return PluginHookNotifier(ref.read(persistenceProvider));
-});
+      return PluginHookNotifier(ref.read(persistenceProvider));
+    });
 
 class PluginHookNotifier extends Notifier<List<ReceiveHook>> {
   final PersistenceService _persistence;

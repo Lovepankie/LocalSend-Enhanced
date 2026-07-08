@@ -53,10 +53,7 @@ class HooksPage extends StatelessWidget {
   }
 
   Future<void> _showAddDialog(BuildContext context) async {
-    await showDialog(
-      context: context,
-      builder: (_) => const _AddHookDialog(),
-    );
+    await showDialog(context: context, builder: (_) => const _AddHookDialog());
   }
 }
 
@@ -82,7 +79,8 @@ class _HookCard extends StatelessWidget {
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),
           color: Theme.of(context).colorScheme.error,
-          onPressed: () => context.notifier(pluginHookProvider).removeHook(hook.id),
+          onPressed: () =>
+              context.notifier(pluginHookProvider).removeHook(hook.id),
         ),
       ),
     );
@@ -145,7 +143,9 @@ class _AddHookDialogState extends State<_AddHookDialog> {
             TextField(
               controller: _targetController,
               decoration: InputDecoration(
-                labelText: _type == HookType.shellCommand ? 'Shell Command' : 'URL',
+                labelText: _type == HookType.shellCommand
+                    ? 'Shell Command'
+                    : 'URL',
                 hintText: _type == HookType.shellCommand
                     ? 'e.g. notify-send "File received: \$LS_FILE_NAME"'
                     : 'https://your-server.com/webhook',
@@ -170,10 +170,14 @@ class _AddHookDialogState extends State<_AddHookDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: _nameController.text.trim().isEmpty || _targetController.text.trim().isEmpty
+          onPressed:
+              _nameController.text.trim().isEmpty ||
+                  _targetController.text.trim().isEmpty
               ? null
               : () {
-                  context.notifier(pluginHookProvider).addHook(
+                  context
+                      .notifier(pluginHookProvider)
+                      .addHook(
                         name: _nameController.text.trim(),
                         type: _type,
                         target: _targetController.text.trim(),

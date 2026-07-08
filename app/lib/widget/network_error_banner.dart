@@ -35,7 +35,9 @@ class NetworkErrorBanner extends StatelessWidget {
               child: Row(
                 children: [
                   Icon(
-                    isWarning ? Icons.warning_amber_rounded : Icons.error_outline_rounded,
+                    isWarning
+                        ? Icons.warning_amber_rounded
+                        : Icons.error_outline_rounded,
                     color: fgColor,
                     size: 18,
                   ),
@@ -50,7 +52,8 @@ class NetworkErrorBanner extends StatelessWidget {
                     icon: Icon(Icons.close, color: fgColor, size: 18),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: () => context.notifier(networkErrorProvider).dismissFirst(),
+                    onPressed: () =>
+                        context.notifier(networkErrorProvider).dismissFirst(),
                   ),
                 ],
               ),

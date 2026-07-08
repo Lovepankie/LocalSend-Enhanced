@@ -6,19 +6,15 @@ class E2ESessionState {
   final String? passphrase;
   final E2EEncryptionService? service;
 
-  const E2ESessionState({
-    required this.enabled,
-    this.passphrase,
-    this.service,
-  });
+  const E2ESessionState({required this.enabled, this.passphrase, this.service});
 
   static const disabled = E2ESessionState(enabled: false);
 }
 
 final e2eSessionProvider =
     NotifierProvider<E2ESessionNotifier, E2ESessionState>((ref) {
-  return E2ESessionNotifier();
-});
+      return E2ESessionNotifier();
+    });
 
 class E2ESessionNotifier extends Notifier<E2ESessionState> {
   @override

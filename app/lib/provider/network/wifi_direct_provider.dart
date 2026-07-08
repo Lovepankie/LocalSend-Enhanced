@@ -32,8 +32,8 @@ class WifiDirectState {
 
 final wifiDirectProvider =
     NotifierProvider<WifiDirectNotifier, WifiDirectState>((ref) {
-  return WifiDirectNotifier();
-});
+      return WifiDirectNotifier();
+    });
 
 class WifiDirectNotifier extends Notifier<WifiDirectState> {
   late final WifiDirectService _service;

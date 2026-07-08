@@ -3,7 +3,8 @@ import 'package:localsend_app/util/native/context_menu_helper.dart';
 import 'package:localsend_app/util/ui/dynamic_colors.dart';
 
 /// Initializes PersistenceService and handles first-launch side effects.
-Future<({PersistenceService persistence, dynamic dynamicColors})> initPersistence() async {
+Future<({PersistenceService persistence, dynamic dynamicColors})>
+initPersistence() async {
   final dynamicColors = await getDynamicColors();
 
   final persistence = await PersistenceService.initialize(

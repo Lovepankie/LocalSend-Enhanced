@@ -68,13 +68,17 @@ class _E2ESettingsPageState extends State<E2ESettingsPage> {
           const SizedBox(height: 20),
           SwitchListTile(
             title: const Text('Enable E2E Encryption'),
-            subtitle: Text(state.enabled ? 'Enabled for this session' : 'Disabled'),
+            subtitle: Text(
+              state.enabled ? 'Enabled for this session' : 'Disabled',
+            ),
             value: state.enabled,
             onChanged: (v) {
               if (!v) {
                 context.notifier(e2eSessionProvider).disable();
               } else if (_controller.text.trim().isNotEmpty) {
-                context.notifier(e2eSessionProvider).enable(_controller.text.trim());
+                context
+                    .notifier(e2eSessionProvider)
+                    .enable(_controller.text.trim());
               }
             },
           ),
@@ -118,7 +122,11 @@ class _E2ESettingsPageState extends State<E2ESettingsPage> {
             const SizedBox(height: 8),
             Center(
               child: Chip(
-                avatar: const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                avatar: const Icon(
+                  Icons.check_circle,
+                  color: Colors.green,
+                  size: 18,
+                ),
                 label: const Text('Encryption active'),
                 backgroundColor: Colors.green.withOpacity(0.1),
               ),

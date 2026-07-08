@@ -26,28 +26,29 @@ class AuditEntry {
   });
 
   Map<String, dynamic> toJson() => {
-        'timestamp': timestamp.toIso8601String(),
-        'direction': direction.name,
-        'peerAlias': peerAlias,
-        'fileName': fileName,
-        'fileSize': fileSize,
-        'success': success,
-        if (errorMessage != null) 'errorMessage': errorMessage,
-      };
+    'timestamp': timestamp.toIso8601String(),
+    'direction': direction.name,
+    'peerAlias': peerAlias,
+    'fileName': fileName,
+    'fileSize': fileSize,
+    'success': success,
+    if (errorMessage != null) 'errorMessage': errorMessage,
+  };
 
   static AuditEntry fromJson(Map<String, dynamic> json) => AuditEntry(
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        direction: AuditDirection.values.byName(json['direction'] as String),
-        peerAlias: json['peerAlias'] as String,
-        fileName: json['fileName'] as String,
-        fileSize: json['fileSize'] as int,
-        success: json['success'] as bool,
-        errorMessage: json['errorMessage'] as String?,
-      );
+    timestamp: DateTime.parse(json['timestamp'] as String),
+    direction: AuditDirection.values.byName(json['direction'] as String),
+    peerAlias: json['peerAlias'] as String,
+    fileName: json['fileName'] as String,
+    fileSize: json['fileSize'] as int,
+    success: json['success'] as bool,
+    errorMessage: json['errorMessage'] as String?,
+  );
 }
 
-final auditLogProvider =
-    NotifierProvider<AuditLogNotifier, List<AuditEntry>>((ref) {
+final auditLogProvider = NotifierProvider<AuditLogNotifier, List<AuditEntry>>((
+  ref,
+) {
   return AuditLogNotifier();
 });
 

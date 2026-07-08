@@ -29,28 +29,33 @@ class NetworkErrorState {
   NetworkErrorState cleared() => const NetworkErrorState(errors: []);
 }
 
-final networkErrorProvider = NotifierProvider<NetworkErrorNotifier, NetworkErrorState>((ref) {
-  return NetworkErrorNotifier();
-});
+final networkErrorProvider =
+    NotifierProvider<NetworkErrorNotifier, NetworkErrorState>((ref) {
+      return NetworkErrorNotifier();
+    });
 
 class NetworkErrorNotifier extends Notifier<NetworkErrorState> {
   @override
   NetworkErrorState init() => const NetworkErrorState(errors: []);
 
   void addWarning(String message) {
-    state = state.withError(NetworkError(
-      message: message,
-      severity: NetworkErrorSeverity.warning,
-      timestamp: DateTime.now(),
-    ));
+    state = state.withError(
+      NetworkError(
+        message: message,
+        severity: NetworkErrorSeverity.warning,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 
   void addError(String message) {
-    state = state.withError(NetworkError(
-      message: message,
-      severity: NetworkErrorSeverity.error,
-      timestamp: DateTime.now(),
-    ));
+    state = state.withError(
+      NetworkError(
+        message: message,
+        severity: NetworkErrorSeverity.error,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 
   void dismissFirst() {

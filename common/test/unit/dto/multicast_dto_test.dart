@@ -8,7 +8,8 @@ import 'package:test/test.dart';
 void main() {
   group('MulticastDto', () {
     test('parses full v2 JSON correctly', () {
-      final json = jsonDecode('''{
+      final json =
+          jsonDecode('''{
         "alias": "TestPhone",
         "version": "2.1",
         "deviceModel": "Pixel 7",
@@ -18,7 +19,8 @@ void main() {
         "protocol": "https",
         "download": false,
         "announce": true
-      }''') as Map<String, dynamic>;
+      }''')
+              as Map<String, dynamic>;
 
       final dto = MulticastDto.fromJson(json);
 
@@ -34,7 +36,8 @@ void main() {
     });
 
     test('parses v1 JSON without optional fields', () {
-      final json = jsonDecode('''{
+      final json =
+          jsonDecode('''{
         "alias": "OldDevice",
         "version": null,
         "deviceModel": null,
@@ -44,7 +47,8 @@ void main() {
         "protocol": null,
         "download": null,
         "announcement": true
-      }''') as Map<String, dynamic>;
+      }''')
+              as Map<String, dynamic>;
 
       final dto = MulticastDto.fromJson(json);
 
@@ -56,7 +60,8 @@ void main() {
     });
 
     test('toDevice uses own port when DTO port is null (v1 compat)', () {
-      final json = jsonDecode('''{
+      final json =
+          jsonDecode('''{
         "alias": "LegacyDevice",
         "version": null,
         "deviceModel": null,
@@ -67,7 +72,8 @@ void main() {
         "download": null,
         "announcement": null,
         "announce": null
-      }''') as Map<String, dynamic>;
+      }''')
+              as Map<String, dynamic>;
 
       final dto = MulticastDto.fromJson(json);
       final device = dto.toDevice('192.168.1.10', 53317, true);
@@ -81,7 +87,8 @@ void main() {
     });
 
     test('toDevice uses DTO port and protocol when provided', () {
-      final json = jsonDecode('''{
+      final json =
+          jsonDecode('''{
         "alias": "ModernDevice",
         "version": "2.1",
         "deviceModel": "MacBook",
@@ -92,7 +99,8 @@ void main() {
         "download": true,
         "announcement": null,
         "announce": false
-      }''') as Map<String, dynamic>;
+      }''')
+              as Map<String, dynamic>;
 
       final dto = MulticastDto.fromJson(json);
       final device = dto.toDevice('10.0.0.5', 53317, true);
@@ -107,7 +115,8 @@ void main() {
     test('own fingerprint is intended to be filtered by caller', () {
       // The DTO itself does not know the own fingerprint — filtering
       // is the responsibility of the multicast listener, not the DTO.
-      final json = jsonDecode('''{
+      final json =
+          jsonDecode('''{
         "alias": "Self",
         "version": "2.1",
         "deviceModel": null,
@@ -118,7 +127,8 @@ void main() {
         "download": false,
         "announcement": null,
         "announce": false
-      }''') as Map<String, dynamic>;
+      }''')
+              as Map<String, dynamic>;
 
       final dto = MulticastDto.fromJson(json);
       expect(dto.fingerprint, equals('self_fp'));

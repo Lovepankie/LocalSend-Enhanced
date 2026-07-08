@@ -56,10 +56,15 @@ class DesktopWifiDirectService implements WifiDirectService {
 
     _logger.info('Creating Linux hotspot: $ssid');
     final result = await Process.run('nmcli', [
-      'device', 'wifi', 'hotspot',
-      'con-name', connId,
-      'ssid', ssid,
-      'password', passphrase,
+      'device',
+      'wifi',
+      'hotspot',
+      'con-name',
+      connId,
+      'ssid',
+      ssid,
+      'password',
+      passphrase,
     ]);
 
     if (result.exitCode != 0) {
@@ -81,8 +86,12 @@ class DesktopWifiDirectService implements WifiDirectService {
 
   Future<void> _joinLinuxHotspot(HotspotCredentials credentials) async {
     final result = await Process.run('nmcli', [
-      'device', 'wifi', 'connect', credentials.ssid,
-      'password', credentials.passphrase,
+      'device',
+      'wifi',
+      'connect',
+      credentials.ssid,
+      'password',
+      credentials.passphrase,
     ]);
     if (result.exitCode != 0) {
       throw WifiDirectException('nmcli connect failed: ${result.stderr}');
@@ -105,16 +114,24 @@ class DesktopWifiDirectService implements WifiDirectService {
 
     _logger.info('Creating Windows hosted network: $ssid');
     var result = await Process.run('netsh', [
-      'wlan', 'set', 'hostednetwork',
-      'mode=allow', 'ssid=$ssid', 'key=$passphrase',
+      'wlan',
+      'set',
+      'hostednetwork',
+      'mode=allow',
+      'ssid=$ssid',
+      'key=$passphrase',
     ]);
     if (result.exitCode != 0) {
-      throw WifiDirectException('netsh set hostednetwork failed: ${result.stderr}');
+      throw WifiDirectException(
+        'netsh set hostednetwork failed: ${result.stderr}',
+      );
     }
 
     result = await Process.run('netsh', ['wlan', 'start', 'hostednetwork']);
     if (result.exitCode != 0) {
-      throw WifiDirectException('netsh start hostednetwork failed: ${result.stderr}');
+      throw WifiDirectException(
+        'netsh start hostednetwork failed: ${result.stderr}',
+      );
     }
 
     _activeCredentials = HotspotCredentials(ssid: ssid, passphrase: passphrase);
@@ -129,7 +146,8 @@ class DesktopWifiDirectService implements WifiDirectService {
   Future<void> _joinWindowsHotspot(HotspotCredentials credentials) async {
     // Windows auto-connects when the profile is added and the network is in range.
     // Using netsh wlan add profile + connect.
-    final profileXml = '''<?xml version="1.0"?>
+    final profileXml =
+        '''<?xml version="1.0"?>
 <WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1">
   <name>${credentials.ssid}</name>
   <SSIDConfig><SSID><name>${credentials.ssid}</name></SSID></SSIDConfig>
@@ -149,17 +167,30 @@ class DesktopWifiDirectService implements WifiDirectService {
   </security></MSM>
 </WLANProfile>''';
 
-    final profileFile = File('${Directory.systemTemp.path}\\ls_wifi_profile.xml');
+    final profileFile = File(
+      '${Directory.systemTemp.path}\\ls_wifi_profile.xml',
+    );
     await profileFile.writeAsString(profileXml);
 
-    var result = await Process.run('netsh', ['wlan', 'add', 'profile', 'filename=${profileFile.path}']);
+    var result = await Process.run('netsh', [
+      'wlan',
+      'add',
+      'profile',
+      'filename=${profileFile.path}',
+    ]);
     if (result.exitCode != 0) {
       throw WifiDirectException('Failed to add WiFi profile: ${result.stderr}');
     }
 
-    result = await Process.run('netsh', ['wlan', 'connect', 'name=${credentials.ssid}']);
+    result = await Process.run('netsh', [
+      'wlan',
+      'connect',
+      'name=${credentials.ssid}',
+    ]);
     if (result.exitCode != 0) {
-      throw WifiDirectException('Failed to connect to ${credentials.ssid}: ${result.stderr}');
+      throw WifiDirectException(
+        'Failed to connect to ${credentials.ssid}: ${result.stderr}',
+      );
     }
 
     _activeCredentials = credentials;

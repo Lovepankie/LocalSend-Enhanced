@@ -20,18 +20,18 @@ class ReceiveHook {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'type': type.name,
-        'target': target,
-      };
+    'id': id,
+    'name': name,
+    'type': type.name,
+    'target': target,
+  };
 
   static ReceiveHook fromJson(Map<String, dynamic> json) => ReceiveHook(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        type: HookType.values.byName(json['type'] as String),
-        target: json['target'] as String,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    type: HookType.values.byName(json['type'] as String),
+    target: json['target'] as String,
+  );
 }
 
 enum HookType { shellCommand, webhook }
@@ -52,12 +52,12 @@ class HookPayload {
   });
 
   Map<String, dynamic> toJson() => {
-        'fileName': fileName,
-        'filePath': filePath,
-        'fileSize': fileSize,
-        'senderAlias': senderAlias,
-        'timestamp': timestamp.toIso8601String(),
-      };
+    'fileName': fileName,
+    'filePath': filePath,
+    'fileSize': fileSize,
+    'senderAlias': senderAlias,
+    'timestamp': timestamp.toIso8601String(),
+  };
 }
 
 /// Fires configured hooks when a file is received.

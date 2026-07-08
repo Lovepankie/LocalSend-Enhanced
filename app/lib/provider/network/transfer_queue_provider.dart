@@ -58,8 +58,8 @@ class TransferQueueState {
 
 final transferQueueProvider =
     NotifierProvider<TransferQueueNotifier, TransferQueueState>((ref) {
-  return TransferQueueNotifier();
-});
+      return TransferQueueNotifier();
+    });
 
 class TransferQueueNotifier extends Notifier<TransferQueueState> {
   @override
@@ -113,7 +113,9 @@ class TransferQueueNotifier extends Notifier<TransferQueueState> {
       _updateItem(entry.id, QueuedTransferStatus.sending);
 
       try {
-        await ref.notifier(sendProvider).startSession(
+        await ref
+            .notifier(sendProvider)
+            .startSession(
               target: entry.target,
               files: entry.files,
               background: true,
@@ -121,8 +123,11 @@ class TransferQueueNotifier extends Notifier<TransferQueueState> {
         _updateItem(entry.id, QueuedTransferStatus.done);
         _logger.info('Queue: finished sending to ${entry.target.alias}');
       } catch (e) {
-        _updateItem(entry.id, QueuedTransferStatus.failed,
-            errorMessage: e.toString());
+        _updateItem(
+          entry.id,
+          QueuedTransferStatus.failed,
+          errorMessage: e.toString(),
+        );
         _logger.warning('Queue: failed sending to ${entry.target.alias}', e);
       }
     }
@@ -130,11 +135,15 @@ class TransferQueueNotifier extends Notifier<TransferQueueState> {
     state = state.copyWith(running: false);
   }
 
-  void _updateItem(String id, QueuedTransferStatus status,
-      {String? errorMessage}) {
+  void _updateItem(
+    String id,
+    QueuedTransferStatus status, {
+    String? errorMessage,
+  }) {
     state = state.copyWith(
       items: state.items.map((i) {
-        if (i.id == id) return i.copyWith(status: status, errorMessage: errorMessage);
+        if (i.id == id)
+          return i.copyWith(status: status, errorMessage: errorMessage);
         return i;
       }).toList(),
     );

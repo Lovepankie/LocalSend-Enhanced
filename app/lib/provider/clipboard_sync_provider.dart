@@ -38,8 +38,8 @@ class ClipboardSyncState {
 
 final clipboardSyncProvider =
     NotifierProvider<ClipboardSyncNotifier, ClipboardSyncState>((ref) {
-  return ClipboardSyncNotifier();
-});
+      return ClipboardSyncNotifier();
+    });
 
 class ClipboardSyncNotifier extends Notifier<ClipboardSyncState> {
   Timer? _pollTimer;
@@ -77,7 +77,10 @@ class ClipboardSyncNotifier extends Notifier<ClipboardSyncState> {
       if (text == state.lastSyncedText) return;
 
       _logger.info('Clipboard changed, syncing to nearby devices');
-      state = state.copyWith(lastSyncedText: text, lastSyncedAt: DateTime.now());
+      state = state.copyWith(
+        lastSyncedText: text,
+        lastSyncedAt: DateTime.now(),
+      );
 
       await _sendToAllDevices(text);
     } catch (e) {
@@ -104,11 +107,9 @@ class ClipboardSyncNotifier extends Notifier<ClipboardSyncState> {
 
     for (final device in devices) {
       try {
-        await ref.notifier(sendProvider).startSession(
-          target: device,
-          files: [file],
-          background: true,
-        );
+        await ref
+            .notifier(sendProvider)
+            .startSession(target: device, files: [file], background: true);
       } catch (e) {
         _logger.warning('Clipboard sync to ${device.alias} failed', e);
       }

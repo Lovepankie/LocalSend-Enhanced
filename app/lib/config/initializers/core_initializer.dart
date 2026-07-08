@@ -15,7 +15,9 @@ final _logger = Logger('CoreInitializer');
 Future<void> initCore(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  initLogger(args.contains('-v') || args.contains('--verbose') ? Level.ALL : Level.INFO);
+  initLogger(
+    args.contains('-v') || args.contains('--verbose') ? Level.ALL : Level.INFO,
+  );
   MapperContainer.globals.use(const FileDtoMapper());
 
   await RustLib.init();
