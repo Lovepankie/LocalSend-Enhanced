@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localsend_app/provider/direct/direct_pairing.dart';
 import 'package:localsend_app/provider/network/wifi_direct_provider.dart';
 import 'package:localsend_app/service/wifi_direct_service.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
@@ -57,7 +58,10 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (state.mode) {
       WifiDirectMode.idle => _IdleView(canHost: canHost),
-      WifiDirectMode.hosting => _HostingView(credentials: state.credentials),
+      WifiDirectMode.hosting => _HostingView(
+          pairing: state.pairing,
+          credentials: state.credentials,
+        ),
       WifiDirectMode.joining => const _JoiningView(),
       WifiDirectMode.connected => const _ConnectedView(),
     };
@@ -142,9 +146,10 @@ class _IdleView extends StatelessWidget {
 
 /// Shows the QR code for the hosted hotspot.
 class _HostingView extends StatelessWidget {
+  final PairingPayload? pairing;
   final HotspotCredentials? credentials;
 
-  const _HostingView({this.credentials});
+  const _HostingView({this.pairing, this.credentials});
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +157,11 @@ class _HostingView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final payload = credentials!.toQrPayload();
+    // Primary payload is the lsd:// pairing URI (carries host IP + port so the
+    // guest connects directly); fall back to the plain WiFi QR if the host IP
+    // could not be resolved.
+    final payload = pairing?.toUri() ?? credentials!.toQrPayload();
+    final webUrl = pairing?.baseUrl;
 
     return Center(
       child: Padding(
@@ -186,6 +195,16 @@ class _HostingView extends StatelessWidget {
             const SizedBox(height: 20),
             _CredentialRow(label: 'Network', value: credentials!.ssid),
             _CredentialRow(label: 'Password', value: credentials!.passphrase),
+            if (webUrl != null) ...[
+              const SizedBox(height: 8),
+              _CredentialRow(label: 'Browser', value: webUrl),
+              Text(
+                'On a computer: join this network, then open the address above '
+                'in any browser — no app needed.',
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               'Once connected, LocalSend will discover devices automatically.',
