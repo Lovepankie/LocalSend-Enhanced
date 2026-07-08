@@ -1,0 +1,153 @@
+name: Build Artifacts
+
+# Produces installable, downloadable artifacts (Android APKs + Linux bundle)
+# without any repository secrets: the Android release APK is signed with an
+# ephemeral keystore generated at build time. Cloud runners avoid the local
+# NTFS exec-bit limitation that blocks Rust (rhttp) and gradlew.
+#
+# Triggers:
+#   - Manual (workflow_dispatch) — artifacts appear on the run page.
+#   - Tag push matching v* or enhanced-v* — artifacts also attach to a Release.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+      - "enhanced-v*"
+
+env:
+  FLUTTER_VERSION: "3.38.10"
+
+jobs:
+  android:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Strip proprietary dependencies (FOSS build)
+        run: sh scripts/remove_proprietary_dependencies.sh
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Generate ephemeral signing keystore
+        working-directory: app/android
+        run: |
+          keytool -genkeypair -v \
+            -keystore app/upload-keystore.jks \
+            -storepass localsend -keypass localsend \
+            -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=LocalSend Enhanced, OU=RincolTech, O=RincolTech, L=Kampala, C=UG"
+          cat > key.properties <<'EOF'
+          storePassword=localsend
+          keyPassword=localsend
+          keyAlias=upload
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Dependencies (cargokit - rust_builder)
+        working-directory: app/rust_builder/cargokit/build_tool
+        run: flutter pub get
+
+      - name: Dependencies (app)
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build APK (split per ABI)
+        working-directory: app
+        run: flutter build apk --release --split-per-abi
+
+      - name: Collect APKs
+        run: |
+          mkdir -p dist
+          cp app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk   dist/LocalSend-Enhanced-arm64-v8a.apk
+          cp app/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk dist/LocalSend-Enhanced-armeabi-v7a.apk
+          cp app/build/app/outputs/flutter-apk/app-x86_64-release.apk      dist/LocalSend-Enhanced-x86_64.apk
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: dist/*.apk
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Strip proprietary dependencies (FOSS build)
+        run: sh scripts/remove_proprietary_dependencies.sh
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libgtk-3-dev libayatana-appindicator3-dev
+
+      - name: Set up Flutter SDK
+        uses: flutter-actions/setup-flutter@v4
+        with:
+          version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Dependencies (cargokit - rust_builder)
+        working-directory: app/rust_builder/cargokit/build_tool
+        run: flutter pub get
+
+      - name: Dependencies (app)
+        working-directory: app
+        run: flutter pub get
+
+      - name: Build Linux bundle
+        working-directory: app
+        run: |
+          flutter config --enable-linux-desktop
+          flutter build linux --release
+
+      - name: Package Linux bundle
+        run: |
+          mkdir -p dist
+          tar -czf dist/LocalSend-Enhanced-linux-x64.tar.gz \
+            -C app/build/linux/x64/release/bundle .
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-bundle
+          path: dist/*.tar.gz
+
+  release:
+    needs: [android, linux]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          generate_release_notes: true
+          files: |
+            artifacts/android-apks/*.apk
+            artifacts/linux-bundle/*.tar.gz
