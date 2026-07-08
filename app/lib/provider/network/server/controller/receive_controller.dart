@@ -33,6 +33,8 @@ import 'package:localsend_app/provider/network/send_provider.dart';
 import 'package:localsend_app/provider/network/server/controller/common.dart';
 import 'package:localsend_app/provider/network/server/server_provider.dart';
 import 'package:localsend_app/provider/network/server/server_utils.dart';
+import 'package:localsend_app/provider/plugin_hook_provider.dart';
+import 'package:localsend_app/service/plugin_hook_service.dart';
 import 'package:localsend_app/provider/progress_provider.dart';
 import 'package:localsend_app/provider/receive_history_provider.dart';
 import 'package:localsend_app/provider/selection/selected_receiving_files_provider.dart';
@@ -661,6 +663,23 @@ class ReceiveController {
           );
 
       _logger.info('Saved ${receivingFile.file.fileName}.');
+
+      // Fire configured receive hooks (fire-and-forget; failures are logged
+      // inside the service and never affect the receive flow).
+      unawaited(
+        server.ref
+            .notifier(pluginHookProvider)
+            .service
+            .fireOnReceive(
+              HookPayload(
+                fileName: receivingFile.desiredName!,
+                filePath: filePath,
+                fileSize: receivingFile.file.size,
+                senderAlias: receiveState.senderAlias,
+                timestamp: DateTime.now().toUtc(),
+              ),
+            ),
+      );
     } catch (e, st) {
       server.setState(
         (oldState) => oldState?.copyWith(
