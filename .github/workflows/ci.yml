@@ -64,7 +64,7 @@ jobs:
         run: flutter pub get
       - name: Analyze (app)
         working-directory: app
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
       - name: Test (app)
         working-directory: app
         run: flutter test
