@@ -580,8 +580,8 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
               direction: AuditDirection.sent,
               peerAlias: target.alias,
               fileName: file.file.fileName,
-              fileSize:
-                  file.file.size ?? 0, // ignore: dead_null_aware_expression
+              // ignore: dead_null_aware_expression, dead_code
+              fileSize: file.file.size ?? 0,
               success: fileError == null,
               errorMessage: fileError,
             ),
