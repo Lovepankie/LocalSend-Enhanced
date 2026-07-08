@@ -147,6 +147,11 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
     'advancedSettings',
     _$advancedSettings,
   );
+  static int _$parallelUploads(SettingsState v) => v.parallelUploads;
+  static const Field<SettingsState, int> _f$parallelUploads = Field(
+    'parallelUploads',
+    _$parallelUploads,
+  );
 
   @override
   final MappableFields<SettingsState> fields = const {
@@ -176,6 +181,7 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
     #shareViaLinkAutoAccept: _f$shareViaLinkAutoAccept,
     #discoveryTimeout: _f$discoveryTimeout,
     #advancedSettings: _f$advancedSettings,
+    #parallelUploads: _f$parallelUploads,
   };
 
   static SettingsState _instantiate(DecodingData data) {
@@ -206,6 +212,7 @@ class SettingsStateMapper extends ClassMapperBase<SettingsState> {
       shareViaLinkAutoAccept: data.dec(_f$shareViaLinkAutoAccept),
       discoveryTimeout: data.dec(_f$discoveryTimeout),
       advancedSettings: data.dec(_f$advancedSettings),
+      parallelUploads: data.dec(_f$parallelUploads),
     );
   }
 
@@ -302,6 +309,7 @@ abstract class SettingsStateCopyWith<$R, $In extends SettingsState, $Out>
     bool? shareViaLinkAutoAccept,
     int? discoveryTimeout,
     bool? advancedSettings,
+    int? parallelUploads,
   });
   SettingsStateCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -360,6 +368,7 @@ class _SettingsStateCopyWithImpl<$R, $Out>
     bool? shareViaLinkAutoAccept,
     int? discoveryTimeout,
     bool? advancedSettings,
+    int? parallelUploads,
   }) => $apply(
     FieldCopyWithData({
       if (showToken != null) #showToken: showToken,
@@ -391,6 +400,7 @@ class _SettingsStateCopyWithImpl<$R, $Out>
         #shareViaLinkAutoAccept: shareViaLinkAutoAccept,
       if (discoveryTimeout != null) #discoveryTimeout: discoveryTimeout,
       if (advancedSettings != null) #advancedSettings: advancedSettings,
+      if (parallelUploads != null) #parallelUploads: parallelUploads,
     }),
   );
   @override
@@ -430,6 +440,7 @@ class _SettingsStateCopyWithImpl<$R, $Out>
     ),
     discoveryTimeout: data.get(#discoveryTimeout, or: $value.discoveryTimeout),
     advancedSettings: data.get(#advancedSettings, or: $value.advancedSettings),
+    parallelUploads: data.get(#parallelUploads, or: $value.parallelUploads),
   );
 
   @override

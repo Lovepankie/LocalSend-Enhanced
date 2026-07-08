@@ -1,4 +1,5 @@
 import 'package:common/isolate.dart';
+import 'package:common/model/dto/multicast_dto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:localsend_app/config/initializers/desktop_initializer.dart';
