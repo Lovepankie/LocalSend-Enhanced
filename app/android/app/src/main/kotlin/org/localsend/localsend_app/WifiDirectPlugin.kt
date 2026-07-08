@@ -107,7 +107,7 @@ object WifiDirectPlugin {
 
     /**
      * Resolves the host's own IPv4 on the local-only hotspot (SoftAP) interface.
-     * Prefers AP-like interfaces (ap*/swlan*/softap*/wlan1/p2p*); otherwise falls
+     * Prefers AP-like interfaces (ap, swlan, softap, wlan1, p2p); otherwise falls
      * back to any non-loopback site-local IPv4. Retries because the AP interface
      * may not have its address immediately after the hotspot starts.
      */
