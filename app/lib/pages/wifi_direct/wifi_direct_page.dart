@@ -198,10 +198,10 @@ class _HostingView extends StatelessWidget {
             _CredentialRow(label: 'Password', value: credentials!.passphrase),
             if (webUrl != null) ...[
               const SizedBox(height: 8),
-              _CredentialRow(label: 'Browser', value: webUrl),
+              _CredentialRow(label: 'Browser', value: '$webUrl/direct'),
               Text(
                 'On a computer: join this network, then open the address above '
-                'in any browser — no app needed.',
+                'in any browser to send files here — no app needed.',
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
