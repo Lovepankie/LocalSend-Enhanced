@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive-icon background: Option 3 navy gradient (Mid Navy -> Deep Navy). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="linear"
+        android:angle="315"
+        android:startColor="#254070"
+        android:endColor="#0D1B3E"/>
+</shape>

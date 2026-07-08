@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalSend-Enhanced — App Icon Options</title>
+<style>
+  :root{
+    --navy-deep:#0D1B3E; --navy-mid:#254070; --blue:#1A73E8;
+    --pale:#EEF4FF; --steel:#A0B0C8; --bg:#0b1120; --card:#141c2e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--pale); padding:40px 24px; line-height:1.5;
+  }
+  h1{font-size:26px;font-weight:700;letter-spacing:-.5px;text-align:center}
+  .sub{text-align:center;color:var(--steel);margin:8px 0 40px;font-size:15px}
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:28px;max-width:1200px;margin:0 auto;
+  }
+  .card{
+    background:var(--card);border:1px solid #22304a;border-radius:18px;
+    padding:26px;display:flex;flex-direction:column;align-items:center;gap:18px;
+    transition:transform .15s ease,border-color .15s ease;
+  }
+  .card:hover{transform:translateY(-4px);border-color:var(--blue)}
+  .num{
+    align-self:flex-start;font-size:13px;font-weight:700;color:var(--blue);
+    letter-spacing:1px;text-transform:uppercase;
+  }
+  .name{font-size:19px;font-weight:600}
+  .desc{font-size:13.5px;color:var(--steel);text-align:center;min-height:38px}
+  /* icon tile — mimics an Android/iOS app icon */
+  .icon-lg{width:150px;height:150px;border-radius:34px;overflow:hidden;
+    box-shadow:0 12px 30px rgba(0,0,0,.45)}
+  .sizes{display:flex;align-items:center;gap:14px}
+  .icon-sm{width:56px;height:56px;border-radius:13px;overflow:hidden}
+  .icon-xs{width:32px;height:32px;border-radius:8px;overflow:hidden}
+  .icon-lg svg,.icon-sm svg,.icon-xs svg{display:block;width:100%;height:100%}
+  footer{text-align:center;color:var(--steel);margin-top:44px;font-size:13px}
+  code{background:#0d1626;padding:2px 7px;border-radius:5px;color:var(--pale);font-size:12.5px}
+</style>
+</head>
+<body>
+  <h1>LocalSend&nbsp;Enhanced — Icon Options</h1>
+  <p class="sub">RincolTech palette · Deep Navy #0D1B3E → Blue #1A73E8. Each shown at launcher / list / status-bar sizes.</p>
+
+  <div class="grid">
+
+    <!-- ============ 1. DIRECT BEAM ============ -->
+    <div class="card">
+      <span class="num">Option 1</span>
+      <div class="icon-lg">
+        <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#254070"/><stop offset="1" stop-color="#0D1B3E"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" fill="url(#g1)"/>
+          <!-- left device -->
+          <rect x="86" y="150" width="120" height="212" rx="22" fill="none" stroke="#EEF4FF" stroke-width="14"/>
+          <!-- right device -->
+          <rect x="306" y="150" width="120" height="212" rx="22" fill="none" stroke="#1A73E8" stroke-width="14"/>
+          <!-- transfer arrows -->
+          <path d="M210 232 h74 l-22 -22 M292 280 h-74 l22 22" fill="none" stroke="#1A73E8" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M282 232 l22 24 -22 24" fill="none" stroke="#1A73E8" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <div class="icon-sm"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g1)"/><rect x="86" y="150" width="120" height="212" rx="22" fill="none" stroke="#EEF4FF" stroke-width="14"/><rect x="306" y="150" width="120" height="212" rx="22" fill="none" stroke="#1A73E8" stroke-width="14"/><path d="M210 232 h74 l-22 -22 M292 280 h-74 l22 22" fill="none" stroke="#1A73E8" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="icon-xs"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g1)"/><rect x="86" y="150" width="120" height="212" rx="22" fill="none" stroke="#EEF4FF" stroke-width="18"/><rect x="306" y="150" width="120" height="212" rx="22" fill="none" stroke="#1A73E8" stroke-width="18"/></svg></div>
+      </div>
+      <div class="name">Direct Beam</div>
+      <div class="desc">Two devices with a two-way arrow. Reads instantly as "device-to-device transfer."</div>
+    </div>
+
+    <!-- ============ 2. SIGNAL SEND ============ -->
+    <div class="card">
+      <span class="num">Option 2</span>
+      <div class="icon-lg">
+        <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#1A73E8"/><stop offset="1" stop-color="#0D1B3E"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" fill="url(#g2)"/>
+          <!-- wifi arcs -->
+          <g fill="none" stroke="#EEF4FF" stroke-width="20" stroke-linecap="round" opacity=".5">
+            <path d="M150 200 a150 150 0 0 1 212 0"/>
+            <path d="M188 244 a96 96 0 0 1 136 0"/>
+          </g>
+          <!-- paper plane -->
+          <path d="M256 250 L372 300 L300 322 L286 392 L256 322 L160 300 Z" fill="#EEF4FF"/>
+          <path d="M372 300 L286 340 L300 322 Z" fill="#A0B0C8"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <div class="icon-sm"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g2)"/><g fill="none" stroke="#EEF4FF" stroke-width="20" stroke-linecap="round" opacity=".5"><path d="M150 200 a150 150 0 0 1 212 0"/><path d="M188 244 a96 96 0 0 1 136 0"/></g><path d="M256 250 L372 300 L300 322 L286 392 L256 322 L160 300 Z" fill="#EEF4FF"/></svg></div>
+        <div class="icon-xs"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g2)"/><path d="M256 240 L378 300 L300 326 L286 398 L256 326 L150 300 Z" fill="#EEF4FF"/></svg></div>
+      </div>
+      <div class="name">Signal Send</div>
+      <div class="desc">A send/paper-plane rising through WiFi waves. Emphasises the wireless hotspot angle.</div>
+    </div>
+
+    <!-- ============ 3. EXCHANGE ============ -->
+    <div class="card">
+      <span class="num">Option 3</span>
+      <div class="icon-lg">
+        <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#254070"/><stop offset="1" stop-color="#0D1B3E"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" fill="url(#g3)"/>
+          <!-- top arrow (points right) -->
+          <path d="M150 208 h180" fill="none" stroke="#EEF4FF" stroke-width="24" stroke-linecap="round"/>
+          <path d="M300 176 l44 32 -44 32" fill="none" stroke="#EEF4FF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- bottom arrow (points left) -->
+          <path d="M362 304 h-180" fill="none" stroke="#1A73E8" stroke-width="24" stroke-linecap="round"/>
+          <path d="M212 272 l-44 32 44 32" fill="none" stroke="#1A73E8" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <div class="icon-sm"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g3)"/><path d="M150 208 h180" fill="none" stroke="#EEF4FF" stroke-width="24" stroke-linecap="round"/><path d="M300 176 l44 32 -44 32" fill="none" stroke="#EEF4FF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/><path d="M362 304 h-180" fill="none" stroke="#1A73E8" stroke-width="24" stroke-linecap="round"/><path d="M212 272 l-44 32 44 32" fill="none" stroke="#1A73E8" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="icon-xs"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g3)"/><path d="M150 208 h180" fill="none" stroke="#EEF4FF" stroke-width="30" stroke-linecap="round"/><path d="M300 172 l48 36 -48 36" fill="none" stroke="#EEF4FF" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/><path d="M362 304 h-180" fill="none" stroke="#1A73E8" stroke-width="30" stroke-linecap="round"/><path d="M212 268 l-48 36 48 36" fill="none" stroke="#1A73E8" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="name">Exchange</div>
+      <div class="desc">Classic two-way transfer glyph. Cleanest, most universally understood, scales tiny.</div>
+    </div>
+
+    <!-- ============ 4. NEARBY PULSE ============ -->
+    <div class="card">
+      <span class="num">Option 4</span>
+      <div class="icon-lg">
+        <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="g4" cx="0.35" cy="0.3" r="0.9">
+              <stop offset="0" stop-color="#254070"/><stop offset="1" stop-color="#0D1B3E"/>
+            </radialGradient>
+          </defs>
+          <rect width="512" height="512" fill="url(#g4)"/>
+          <!-- radar rings from bottom-left origin -->
+          <g fill="none" stroke="#1A73E8" stroke-linecap="round">
+            <path d="M150 362 a90 90 0 0 1 0 0" />
+            <circle cx="176" cy="336" r="70" stroke="#1A73E8" stroke-width="16" opacity=".9"/>
+            <circle cx="176" cy="336" r="130" stroke="#4d8ef0" stroke-width="16" opacity=".55"/>
+            <circle cx="176" cy="336" r="190" stroke="#A0B0C8" stroke-width="16" opacity=".3"/>
+          </g>
+          <!-- origin device -->
+          <circle cx="176" cy="336" r="26" fill="#EEF4FF"/>
+          <!-- discovered device -->
+          <circle cx="360" cy="180" r="30" fill="#EEF4FF"/>
+          <circle cx="360" cy="180" r="14" fill="#1A73E8"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <div class="icon-sm"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g4)"/><circle cx="176" cy="336" r="70" fill="none" stroke="#1A73E8" stroke-width="16" opacity=".9"/><circle cx="176" cy="336" r="130" fill="none" stroke="#4d8ef0" stroke-width="16" opacity=".55"/><circle cx="176" cy="336" r="190" fill="none" stroke="#A0B0C8" stroke-width="16" opacity=".3"/><circle cx="176" cy="336" r="26" fill="#EEF4FF"/><circle cx="360" cy="180" r="30" fill="#EEF4FF"/><circle cx="360" cy="180" r="14" fill="#1A73E8"/></svg></div>
+        <div class="icon-xs"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g4)"/><circle cx="176" cy="336" r="90" fill="none" stroke="#1A73E8" stroke-width="22" opacity=".9"/><circle cx="176" cy="336" r="170" fill="none" stroke="#A0B0C8" stroke-width="22" opacity=".4"/><circle cx="176" cy="336" r="34" fill="#EEF4FF"/><circle cx="368" cy="168" r="36" fill="#EEF4FF"/></svg></div>
+      </div>
+      <div class="name">Nearby Pulse</div>
+      <div class="desc">Radar rings finding a nearby device. Directly evokes "hotspot / discover nearby," Xender-like.</div>
+    </div>
+
+    <!-- ============ 5. BOLT LINK ============ -->
+    <div class="card">
+      <span class="num">Option 5</span>
+      <div class="icon-lg">
+        <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g5" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#1A73E8"/><stop offset="0.55" stop-color="#254070"/><stop offset="1" stop-color="#0D1B3E"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" fill="url(#g5)"/>
+          <!-- connection nodes -->
+          <line x1="150" y1="150" x2="256" y2="256" stroke="#A0B0C8" stroke-width="12" opacity=".55"/>
+          <line x1="362" y1="362" x2="256" y2="256" stroke="#A0B0C8" stroke-width="12" opacity=".55"/>
+          <!-- lightning bolt -->
+          <path d="M300 120 L196 290 H262 L212 400 L336 236 H268 Z" fill="#EEF4FF"/>
+          <!-- nodes -->
+          <circle cx="150" cy="150" r="26" fill="#EEF4FF"/>
+          <circle cx="362" cy="362" r="26" fill="#EEF4FF"/>
+        </svg>
+      </div>
+      <div class="sizes">
+        <div class="icon-sm"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g5)"/><line x1="150" y1="150" x2="256" y2="256" stroke="#A0B0C8" stroke-width="12" opacity=".55"/><line x1="362" y1="362" x2="256" y2="256" stroke="#A0B0C8" stroke-width="12" opacity=".55"/><path d="M300 120 L196 290 H262 L212 400 L336 236 H268 Z" fill="#EEF4FF"/><circle cx="150" cy="150" r="26" fill="#EEF4FF"/><circle cx="362" cy="362" r="26" fill="#EEF4FF"/></svg></div>
+        <div class="icon-xs"><svg viewBox="0 0 512 512"><rect width="512" height="512" fill="url(#g5)"/><path d="M300 110 L188 292 H260 L206 408 L344 232 H270 Z" fill="#EEF4FF"/></svg></div>
+      </div>
+      <div class="name">Bolt Link</div>
+      <div class="desc">Lightning across two linked nodes. Says "fast, direct, connected." Bold and energetic.</div>
+    </div>
+
+  </div>
+
+  <footer>
+    Pick a number and I'll export it to all launcher densities (mdpi→xxxhdpi + adaptive icon) via <code>flutter_launcher_icons</code>.
+  </footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <!-- Adaptive foreground: transparent bg, arrows scaled ~1.15x around centre so
+       they fill the adaptive safe zone (central ~66dp of 108dp) without clipping. -->
+  <g transform="translate(256,256) scale(1.15) translate(-256,-256)">
+    <!-- top arrow: white, points right -->
+    <path d="M150 208 h180" fill="none" stroke="#EEF4FF" stroke-width="24" stroke-linecap="round"/>
+    <path d="M300 176 l44 32 -44 32" fill="none" stroke="#EEF4FF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- bottom arrow: blue, points left -->
+    <path d="M362 304 h-180" fill="none" stroke="#1A73E8" stroke-width="24" stroke-linecap="round"/>
+    <path d="M212 272 l-44 32 44 32" fill="none" stroke="#1A73E8" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
