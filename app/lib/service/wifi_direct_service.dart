@@ -36,11 +36,24 @@ class HotspotCredentials {
   final String passphrase;
   final String? bssid;
 
+  /// The host's own IPv4 on the hotspot subnet (the AP gateway), resolved
+  /// natively after the hotspot starts. Guests connect directly to this
+  /// address for transfer. Null on platforms/versions that cannot resolve it.
+  final String? hostIp;
+
   const HotspotCredentials({
     required this.ssid,
     required this.passphrase,
     this.bssid,
+    this.hostIp,
   });
+
+  HotspotCredentials copyWith({String? hostIp}) => HotspotCredentials(
+        ssid: ssid,
+        passphrase: passphrase,
+        bssid: bssid,
+        hostIp: hostIp ?? this.hostIp,
+      );
 
   /// Encodes as the standard WiFi QR format.
   /// Any camera app (Android, iOS) can scan this and connect automatically.
