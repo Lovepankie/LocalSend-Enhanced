@@ -1,0 +1,11 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <!-- Monochrome (themed icon / quick tile): single-colour silhouette, transparent bg.
+       Android tints this; art must be one colour (white here). -->
+  <g transform="translate(256,256) scale(1.15) translate(-256,-256)"
+     fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M150 208 h180"/>
+    <path d="M300 176 l44 32 -44 32"/>
+    <path d="M362 304 h-180"/>
+    <path d="M212 272 l-44 32 44 32"/>
+  </g>
+</svg>
