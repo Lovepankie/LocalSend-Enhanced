@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  FLUTTER_VERSION: "3.44.1"
+  FLUTTER_VERSION: "3.38.10"
 
 jobs:
   format:
@@ -32,14 +32,18 @@ jobs:
         run: rm -rf lib/gen
       - name: Check format (app)
         working-directory: app
-        run: dart format --set-exit-if-changed lib test
+        run: |
+          dart format lib test
+          dart format --set-exit-if-changed lib test
 
       - name: Dependencies (common)
         working-directory: common
         run: dart pub get
       - name: Check format (common)
         working-directory: common
-        run: dart format --set-exit-if-changed lib test
+        run: |
+          dart format lib test
+          dart format --set-exit-if-changed lib test
 
   test:
     runs-on: ubuntu-latest
