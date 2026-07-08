@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:localsend_app/provider/direct/direct_pairing.dart';
+import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
 import 'package:localsend_app/provider/network/wifi_direct_provider.dart';
+import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/service/wifi_direct_service.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
@@ -212,9 +214,55 @@ class _HostingView extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
+            const _GroupSendSection(),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Group send (US3): shows connected-device count and a "send to all" action
+/// that fans out the current file selection to every connected device.
+class _GroupSendSection extends StatelessWidget {
+  const _GroupSendSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final count = context.watch(nearbyDevicesProvider).allDevices.length;
+    final files = context.watch(selectedSendingFilesProvider);
+    if (count == 0) {
+      return const SizedBox.shrink();
+    }
+    final plural = count == 1 ? '' : 's';
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        const Divider(),
+        const SizedBox(height: 8),
+        Text('$count device$plural connected'),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: files.isEmpty
+              ? null
+              : () async {
+                  await context
+                      .notifier(wifiDirectProvider)
+                      .sendToAllConnected(files);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Sending to $count device$plural…')),
+                    );
+                  }
+                },
+          icon: const Icon(Icons.send),
+          label: Text(
+            files.isEmpty
+                ? 'Pick files in the Send tab first'
+                : 'Send ${files.length} file${files.length == 1 ? '' : 's'} to all',
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,9 @@
+import 'package:common/model/device.dart';
+import 'package:localsend_app/model/cross_file.dart';
 import 'package:localsend_app/model/persistence/favorite_device.dart';
 import 'package:localsend_app/provider/direct/direct_pairing.dart';
 import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
+import 'package:localsend_app/provider/network/send_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/service/wifi_direct_service.dart';
 import 'package:localsend_app/service/wifi_direct_service_factory.dart';
@@ -144,6 +147,31 @@ class WifiDirectNotifier extends Notifier<WifiDirectState> {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  /// Devices currently connected/discovered on the direct link.
+  List<Device> get connectedDevices =>
+      ref.read(nearbyDevicesProvider).allDevices.values.toList();
+
+  /// Group send (US3): fans out [files] to every connected device as
+  /// independent send sessions, so one device failing or disconnecting never
+  /// aborts the transfers to the others.
+  Future<void> sendToAllConnected(List<CrossFile> files) async {
+    final devices = connectedDevices;
+    if (devices.isEmpty || files.isEmpty) return;
+    await Future.wait(
+      devices.map((device) async {
+        try {
+          await ref.notifier(sendProvider).startSession(
+                target: device,
+                files: files,
+                background: true,
+              );
+        } catch (_) {
+          // Isolated: a single device failing must not abort the group.
+        }
+      }),
+    );
   }
 
   /// Leaves the currently joined hotspot.
