@@ -10,18 +10,12 @@ import 'package:localsend_app/provider/device_info_provider.dart';
 import 'package:localsend_app/provider/persistence_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/provider/tv_provider.dart';
-import 'package:localsend_app/provider/window_dimensions_provider.dart';
 import 'package:localsend_app/util/native/content_uri_helper.dart';
 import 'package:localsend_app/util/native/device_info_helper.dart';
-import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/util/rhttp.dart';
 import 'package:localsend_app/util/ui/dynamic_colors.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 import 'package:rhttp/rhttp.dart';
-
-// [FOSS_REMOVE_START]
-import 'package:localsend_app/provider/purchase_provider.dart';
-// [FOSS_REMOVE_END]
 
 /// Builds the RefenaContainer with all provider overrides and initializes isolates.
 Future<RefenaContainer> initContainer({

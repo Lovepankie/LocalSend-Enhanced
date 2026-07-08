@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:localsend_app/rust/api/logging.dart' as rust_logging;
 import 'package:localsend_app/rust/frb_generated.dart';
-import 'package:localsend_app/util/rhttp.dart';
 import 'package:logging/logging.dart';
 import 'package:rhttp/rhttp.dart';
 

@@ -1,22 +1,16 @@
-import 'dart:convert';
-
-import 'package:localsend_app/provider/persistence_provider.dart';
 import 'package:localsend_app/service/plugin_hook_service.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
-const _hooksKey = 'ls_receive_hooks';
 
 final pluginHookProvider =
     NotifierProvider<PluginHookNotifier, List<ReceiveHook>>((ref) {
-      return PluginHookNotifier(ref.read(persistenceProvider));
+      return PluginHookNotifier();
     });
 
 class PluginHookNotifier extends Notifier<List<ReceiveHook>> {
-  final PersistenceService _persistence;
-
-  PluginHookNotifier(this._persistence);
+  PluginHookNotifier();
 
   @override
   List<ReceiveHook> init() => _load();

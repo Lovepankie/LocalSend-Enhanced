@@ -4,7 +4,6 @@ import 'package:common/api_route_builder.dart';
 import 'package:common/constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:localsend_app/provider/persistence_provider.dart';
-import 'package:localsend_app/util/native/autostart_helper.dart';
 import 'package:localsend_app/util/native/macos_channel.dart';
 import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/util/native/tray_helper.dart';

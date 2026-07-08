@@ -1,4 +1,3 @@
-import 'package:localsend_app/config/theme.dart';
 import 'package:localsend_app/provider/animation_provider.dart';
 import 'package:localsend_app/util/i18n.dart';
 

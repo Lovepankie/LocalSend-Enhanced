@@ -14,7 +14,6 @@ import 'package:localsend_app/pages/changelog_page.dart';
 import 'package:localsend_app/pages/settings/signaling_server_page.dart';
 import 'package:localsend_app/provider/clipboard_sync_provider.dart';
 import 'package:localsend_app/provider/security_provider.dart';
-import 'package:localsend_app/provider/logging/audit_log_provider.dart';
 import 'package:localsend_app/pages/settings/audit_log_page.dart';
 import 'package:localsend_app/pages/settings/e2e_settings_page.dart';
 import 'package:localsend_app/provider/e2e_session_provider.dart';
