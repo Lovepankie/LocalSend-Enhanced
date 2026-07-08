@@ -12,6 +12,7 @@ import 'package:localsend_app/model/persistence/color_mode.dart';
 import 'package:localsend_app/model/persistence/favorite_device.dart';
 import 'package:localsend_app/model/persistence/receive_history_entry.dart';
 import 'package:localsend_app/model/send_mode.dart';
+import 'package:localsend_app/service/plugin_hook_service.dart';
 import 'package:localsend_app/provider/window_dimensions_provider.dart';
 import 'package:localsend_app/util/alias_generator.dart';
 import 'package:localsend_app/util/native/autostart_helper.dart';
@@ -91,6 +92,7 @@ const _deviceModel = 'ls_device_model';
 const _shareViaLinkAutoAccept = 'ls_share_via_link_auto_accept';
 const _advancedSettingsKey = 'ls_advanced_settings';
 const _parallelUploadsKey = 'ls_parallel_uploads';
+const _hooksKey = 'ls_receive_hooks';
 
 final persistenceProvider = Provider<PersistenceService>((ref) {
   throw Exception('persistenceProvider not initialized');
@@ -379,6 +381,23 @@ class PersistenceService {
 
   Future<void> setParallelUploads(int count) async {
     await _prefs.setInt(_parallelUploadsKey, count.clamp(1, 5));
+  }
+
+  List<ReceiveHook> getHooks() {
+    final raw = _prefs.getStringList(_hooksKey);
+    if (raw == null) {
+      return [];
+    }
+    return raw
+        .map((s) => ReceiveHook.fromJson(jsonDecode(s) as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> setHooks(List<ReceiveHook> hooks) async {
+    await _prefs.setStringList(
+      _hooksKey,
+      hooks.map((h) => jsonEncode(h.toJson())).toList(),
+    );
   }
 
   List<String>? getNetworkWhitelist() {
