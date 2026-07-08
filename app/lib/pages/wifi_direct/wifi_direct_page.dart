@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:localsend_app/provider/direct/direct_pairing.dart';
 import 'package:localsend_app/provider/network/wifi_direct_provider.dart';
 import 'package:localsend_app/service/wifi_direct_service.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 
@@ -309,35 +310,75 @@ class _QrScannerPage extends StatefulWidget {
 }
 
 class _QrScannerPageState extends State<_QrScannerPage> {
+  final MobileScannerController _controller = MobileScannerController();
   bool _processing = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRaw(String raw) async {
+    if (_processing) return;
+    final pairing = PairingPayload.tryParse(raw);
+    if (pairing == null) return; // not one of our QR codes
+    setState(() => _processing = true);
+    await _controller.stop();
+    if (!mounted) return;
+    await context.notifier(wifiDirectProvider).joinFromPairing(pairing);
+    if (mounted) Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Scan QR Code')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.qr_code_scanner, size: 80),
-              const SizedBox(height: 16),
-              Text(
-                'Scan the QR code shown on the host device.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 32),
-              // Manual entry fallback (QR scanner package integration
-              // requires mobile_scanner or similar — wired up at build time)
-              _ManualEntryForm(
-                onCredentials: _onCredentials,
-                processing: _processing,
-              ),
-            ],
+      body: Column(
+        children: [
+          SizedBox(
+            height: 300,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                MobileScanner(
+                  controller: _controller,
+                  onDetect: (capture) {
+                    for (final barcode in capture.barcodes) {
+                      final raw = barcode.rawValue;
+                      if (raw != null) {
+                        _handleRaw(raw);
+                        break;
+                      }
+                    }
+                  },
+                ),
+                if (_processing) const CircularProgressIndicator(),
+              ],
+            ),
           ),
-        ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Point the camera at the host device\'s QR code, '
+                    'or enter the network details manually below.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 24),
+                  _ManualEntryForm(
+                    onCredentials: _onCredentials,
+                    processing: _processing,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
