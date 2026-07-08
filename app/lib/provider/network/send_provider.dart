@@ -22,6 +22,7 @@ import 'package:localsend_app/provider/http_provider.dart';
 import 'package:localsend_app/provider/progress_provider.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/provider/logging/audit_log_provider.dart';
 import 'package:localsend_app/rust/api/http.dart' as rust_http;
 import 'package:localsend_app/rust/api/model.dart' as rust_model;
 import 'package:localsend_app/util/rust.dart';
@@ -40,9 +41,10 @@ final _logger = Logger('Send');
 ///
 /// In contrast to [serverProvider], this provider does not manage a server.
 /// Instead, it only does HTTP requests to other servers.
-final sendProvider = NotifierProvider<SendNotifier, Map<String, SendSessionState>>((ref) {
-  return SendNotifier();
-});
+final sendProvider =
+    NotifierProvider<SendNotifier, Map<String, SendSessionState>>((ref) {
+      return SendNotifier();
+    });
 
 class SendNotifier extends Notifier<Map<String, SendSessionState>> {
   SendNotifier();
@@ -82,10 +84,16 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
                   size: file.size,
                   fileType: file.fileType,
                   hash: null,
-                  preview: files.length == 1 && files.first.fileType == FileType.text && files.first.bytes != null
-                      ? utf8.decode(files.first.bytes!) // send simple message by embedding it into the preview
+                  preview:
+                      files.length == 1 &&
+                          files.first.fileType == FileType.text &&
+                          files.first.bytes != null
+                      ? utf8.decode(
+                          files.first.bytes!,
+                        ) // send simple message by embedding it into the preview
                       : null,
-                  metadata: file.lastModified != null || file.lastAccessed != null
+                  metadata:
+                      file.lastModified != null || file.lastAccessed != null
                       ? FileMetadata(
                           lastModified: file.lastModified,
                           lastAccessed: file.lastAccessed,
@@ -119,11 +127,14 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
         deviceType: originDevice.deviceType.toRust(),
         token: originDevice.fingerprint,
         port: originDevice.port,
-        protocol: originDevice.https ? rust_model.ProtocolType.https : rust_model.ProtocolType.http,
+        protocol: originDevice.https
+            ? rust_model.ProtocolType.https
+            : rust_model.ProtocolType.http,
         hasWebInterface: originDevice.download,
       ),
       files: {
-        for (final entry in requestState.files.entries) entry.key: entry.value.file.toRust(),
+        for (final entry in requestState.files.entries)
+          entry.key: entry.value.file.toRust(),
       },
     );
 
@@ -135,7 +146,11 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
     if (!background) {
       // ignore: use_build_context_synchronously, unawaited_futures
       Routerino.context.push(
-        () => SendPage(showAppBar: false, closeSessionOnClose: true, sessionId: sessionId),
+        () => SendPage(
+          showAppBar: false,
+          closeSessionOnClose: true,
+          sessionId: sessionId,
+        ),
         transition: RouterinoTransition.fade(),
       );
     }
@@ -165,7 +180,8 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
             await sleepAsync(500);
 
             pin = await showDialog<String>(
-              context: Routerino.context, // ignore: use_build_context_synchronously
+              context:
+                  Routerino.context, // ignore: use_build_context_synchronously
               builder: (_) => PinDialog(
                 obscureText: true,
                 showInvalidPin: !pinFirstAttempt,
@@ -177,9 +193,8 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
             if (pin == null) {
               state = state.updateSession(
                 sessionId: sessionId,
-                state: (s) => s?.copyWith(
-                  status: SessionStatus.canceledBySender,
-                ),
+                state: (s) =>
+                    s?.copyWith(status: SessionStatus.canceledBySender),
               );
               return;
             }
@@ -187,25 +202,19 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
           case 403:
             state = state.updateSession(
               sessionId: sessionId,
-              state: (s) => s?.copyWith(
-                status: SessionStatus.declined,
-              ),
+              state: (s) => s?.copyWith(status: SessionStatus.declined),
             );
             return;
           case 409:
             state = state.updateSession(
               sessionId: sessionId,
-              state: (s) => s?.copyWith(
-                status: SessionStatus.recipientBusy,
-              ),
+              state: (s) => s?.copyWith(status: SessionStatus.recipientBusy),
             );
             return;
           case 429:
             state = state.updateSession(
               sessionId: sessionId,
-              state: (s) => s?.copyWith(
-                status: SessionStatus.tooManyAttempts,
-              ),
+              state: (s) => s?.copyWith(status: SessionStatus.tooManyAttempts),
             );
             return;
           default:
@@ -245,9 +254,7 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
         final sessionId = response.response!.sessionId;
         state = state.updateSession(
           sessionId: sessionId,
-          state: (s) => s?.copyWith(
-            remoteSessionId: sessionId,
-          ),
+          state: (s) => s?.copyWith(remoteSessionId: sessionId),
         );
       } catch (e) {
         state = state.updateSession(
@@ -265,14 +272,14 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
       // receiver has nothing selected
       state = state.updateSession(
         sessionId: sessionId,
-        state: (s) => s?.copyWith(
-          status: SessionStatus.finished,
-        ),
+        state: (s) => s?.copyWith(status: SessionStatus.finished),
       );
 
       if (state[sessionId]?.background == false) {
         // ignore: use_build_context_synchronously, unawaited_futures
-        Routerino.context.pushRootImmediately(() => const HomePage(initialTab: HomeTab.send, appStart: false));
+        Routerino.context.pushRootImmediately(
+          () => const HomePage(initialTab: HomeTab.send, appStart: false),
+        );
       }
 
       closeSession(sessionId);
@@ -281,11 +288,14 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
 
     final sendingFiles = {
       for (final file in requestState.files.values)
-        file.file.id: fileMap.containsKey(file.file.id) ? file.copyWith(token: fileMap[file.file.id]) : file.copyWith(status: FileStatus.skipped),
+        file.file.id: fileMap.containsKey(file.file.id)
+            ? file.copyWith(token: fileMap[file.file.id])
+            : file.copyWith(status: FileStatus.skipped),
     };
 
     if (state[sessionId]?.background == false) {
-      final background = ref.read(settingsProvider).sendMode == SendMode.multiple;
+      final background =
+          ref.read(settingsProvider).sendMode == SendMode.multiple;
 
       // ignore: use_build_context_synchronously, unawaited_futures
       Routerino.context.pushAndRemoveUntil(
@@ -302,19 +312,23 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
 
     state = state.updateSession(
       sessionId: sessionId,
-      state: (s) => s?.copyWith(
-        status: SessionStatus.sending,
-        files: sendingFiles,
-      ),
+      state: (s) =>
+          s?.copyWith(status: SessionStatus.sending, files: sendingFiles),
     );
 
     await _sendLoop(ref, sessionId, target, sendingFiles);
   }
 
-  Future<void> _sendLoop(Ref ref, String sessionId, Device target, Map<String, SendingFile> files) async {
+  Future<void> _sendLoop(
+    Ref ref,
+    String sessionId,
+    Device target,
+    Map<String, SendingFile> files,
+  ) async {
     state = state.updateSession(
       sessionId: sessionId,
-      state: (s) => s?.copyWith(startTime: DateTime.now().millisecondsSinceEpoch),
+      state: (s) =>
+          s?.copyWith(startTime: DateTime.now().millisecondsSinceEpoch),
     );
 
     final queue = Queue<SendingFile>()..addAll(files.values);
@@ -355,7 +369,9 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
     if (state[sessionId]!.status != SessionStatus.sending) {
       _logger.info('Transfer was canceled.');
     } else {
-      final hasError = sessionState.files.values.any((file) => file.status == FileStatus.failed);
+      final hasError = sessionState.files.values.any(
+        (file) => file.status == FileStatus.failed,
+      );
       if (!hasError && sessionState.background == true) {
         // close session because everything is fine and it is in background
         closeSession(sessionId);
@@ -365,7 +381,9 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
         state = state.updateSession(
           sessionId: sessionId,
           state: (s) => s?.copyWith(
-            status: hasError ? SessionStatus.finishedWithErrors : SessionStatus.finished,
+            status: hasError
+                ? SessionStatus.finishedWithErrors
+                : SessionStatus.finished,
             endTime: DateTime.now().millisecondsSinceEpoch,
           ),
         );
@@ -381,8 +399,23 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
 
   final uriContent = UriContent();
 
-  /// Sends a file.
-  /// Returns true, if the next file should be sent.
+  static const _maxAutoRetries = 3;
+  static const _retryBaseDelayMs = 1000;
+
+  /// Returns true if an error message indicates a transient network problem
+  /// that is safe to retry (connection refused, timeout, reset, etc.).
+  static bool _isTransientError(String errorMsg) {
+    final lower = errorMsg.toLowerCase();
+    return lower.contains('connection') ||
+        lower.contains('timeout') ||
+        lower.contains('reset') ||
+        lower.contains('refused') ||
+        lower.contains('broken pipe') ||
+        lower.contains('network');
+  }
+
+  /// Sends a file with automatic retry on transient network errors.
+  /// Returns true if the next file should be sent.
   Future<bool> sendFile({
     required String sessionId,
     required int isolateIndex,
@@ -395,24 +428,26 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
     }
 
     final status = state[sessionId]?.status;
-    const allowedStates = {SessionStatus.sending, SessionStatus.finishedWithErrors};
+    const allowedStates = {
+      SessionStatus.sending,
+      SessionStatus.finishedWithErrors,
+    };
     if (status == null || !allowedStates.contains(status)) {
       return false;
     }
 
-    final remoteSessionId = state[sessionId]!.remoteSessionId;
-    final target = state[sessionId]!.target;
-
     if (isRetry) {
       _logger.info('Retrying ${file.file.fileName}');
-
       state = state.updateSession(
         sessionId: sessionId,
         state: (s) => s?.copyWith(
           status: SessionStatus.sending,
           files: s.files.map((key, value) {
             if (key == file.file.id) {
-              return MapEntry(key, value.copyWith(status: FileStatus.queue, errorMessage: null));
+              return MapEntry(
+                key,
+                value.copyWith(status: FileStatus.queue, errorMessage: null),
+              );
             }
             return MapEntry(key, value);
           }),
@@ -422,80 +457,141 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
       _logger.info('Sending ${file.file.fileName}');
     }
 
-    state = state.updateSession(
-      sessionId: sessionId,
-      state: (s) => s?.withFileStatus(file.file.id, FileStatus.sending, null),
-    );
+    String? fileError;
 
-    final taskResult = ref
-        .redux(parentIsolateProvider)
-        .dispatchTakeResult(
-          IsolateHttpUploadAction(
-            isolateIndex: isolateIndex,
-            remoteSessionId: remoteSessionId,
-            remoteFileToken: token,
-            fileId: file.file.id,
-            filePath: file.path,
-            fileBytes: file.bytes,
-            mime: file.file.lookupMime(),
-            fileSize: file.file.size,
-            device: target,
+    for (int attempt = 0; attempt <= _maxAutoRetries; attempt++) {
+      if (attempt > 0) {
+        final delayMs = _retryBaseDelayMs * (1 << (attempt - 1)); // 1s, 2s, 4s
+        _logger.info(
+          'Auto-retry attempt $attempt for ${file.file.fileName} in ${delayMs}ms',
+        );
+        await Future.delayed(Duration(milliseconds: delayMs));
+
+        // Re-check session is still active before retrying
+        final currentStatus = state[sessionId]?.status;
+        if (currentStatus == null || !allowedStates.contains(currentStatus)) {
+          return false;
+        }
+      }
+
+      final remoteSessionId = state[sessionId]!.remoteSessionId;
+      final target = state[sessionId]!.target;
+
+      state = state.updateSession(
+        sessionId: sessionId,
+        state: (s) => s?.withFileStatus(file.file.id, FileStatus.sending, null),
+      );
+
+      final taskResult = ref
+          .redux(parentIsolateProvider)
+          .dispatchTakeResult(
+            IsolateHttpUploadAction(
+              isolateIndex: isolateIndex,
+              remoteSessionId: remoteSessionId,
+              remoteFileToken: token,
+              fileId: file.file.id,
+              filePath: file.path,
+              fileBytes: file.bytes,
+              mime: file.file.lookupMime(),
+              fileSize: file.file.size,
+              device: target,
+            ),
+          );
+
+      fileError = null;
+      try {
+        state = state.updateSession(
+          sessionId: sessionId,
+          state: (s) => s?.copyWith(
+            sendingTasks: [
+              ...?s.sendingTasks,
+              SendingTask(
+                isolateIndex: isolateIndex,
+                taskId: taskResult.taskId,
+              ),
+            ],
           ),
         );
 
-    String? fileError;
-    try {
-      state = state.updateSession(
-        sessionId: sessionId,
-        state: (s) => s?.copyWith(
-          sendingTasks: [
-            ...?s.sendingTasks,
-            SendingTask(
-              isolateIndex: isolateIndex,
-              taskId: taskResult.taskId,
-            ),
-          ],
-        ),
-      );
+        await for (final progress in taskResult.progress) {
+          ref
+              .notifier(progressProvider)
+              .setProgress(
+                sessionId: sessionId,
+                fileId: file.file.id,
+                progress: progress,
+              );
+        }
 
-      await for (final progress in taskResult.progress) {
         ref
             .notifier(progressProvider)
             .setProgress(
               sessionId: sessionId,
               fileId: file.file.id,
-              progress: progress,
+              progress: 1,
             );
-      }
 
-      // set progress to 100% when successfully finished
-      ref
-          .notifier(progressProvider)
-          .setProgress(
-            sessionId: sessionId,
-            fileId: file.file.id,
-            progress: 1,
-          );
-    } catch (e, st) {
-      fileError = e.humanErrorMessage;
-      _logger.warning('Error while sending file ${file.file.fileName}', e, st);
-    } finally {
-      state = state.updateSession(
-        sessionId: sessionId,
-        state: (s) => s?.copyWith(
-          sendingTasks: s.sendingTasks?.where((task) => !(task.isolateIndex == isolateIndex && task.taskId == taskResult.taskId)).toList(),
-        ),
-      );
+        break; // success — exit retry loop
+      } catch (e, st) {
+        fileError = e.humanErrorMessage;
+        _logger.warning(
+          'Error sending ${file.file.fileName} (attempt ${attempt + 1})',
+          e,
+          st,
+        );
+
+        // Only auto-retry on transient errors and if we have attempts left
+        if (attempt >= _maxAutoRetries || !_isTransientError(fileError)) {
+          break;
+        }
+      } finally {
+        state = state.updateSession(
+          sessionId: sessionId,
+          state: (s) => s?.copyWith(
+            sendingTasks: s.sendingTasks
+                ?.where(
+                  (task) =>
+                      !(task.isolateIndex == isolateIndex &&
+                          task.taskId == taskResult.taskId),
+                )
+                .toList(),
+          ),
+        );
+      }
     }
 
     state = state.updateSession(
       sessionId: sessionId,
-      state: (s) => s?.withFileStatus(file.file.id, fileError != null ? FileStatus.failed : FileStatus.finished, fileError),
+      state: (s) => s?.withFileStatus(
+        file.file.id,
+        fileError != null ? FileStatus.failed : FileStatus.finished,
+        fileError,
+      ),
     );
+
+    // Audit log
+    final target = state[sessionId]?.target;
+    if (target != null) {
+      ref
+          .notifier(auditLogProvider)
+          .log(
+            AuditEntry(
+              timestamp: DateTime.now(),
+              direction: AuditDirection.sent,
+              peerAlias: target.alias,
+              fileName: file.file.fileName,
+              // ignore: dead_null_aware_expression, dead_code
+              fileSize: file.file.size ?? 0,
+              success: fileError == null,
+              errorMessage: fileError,
+            ),
+          );
+    }
 
     if (isRetry) {
       final state = this.state[sessionId];
-      if (state != null && state.files.values.map((e) => e.status).isFinishedOrError) {
+      if (state != null &&
+          state.files.values.map((e) => e.status).isFinishedOrError) {
         _finish(sessionId: sessionId);
         return false;
       }
@@ -576,7 +672,8 @@ class SendNotifier extends Notifier<Map<String, SendSessionState>> {
       return;
     }
     state = state.removeSession(ref, sessionId);
-    if (sessionState.status == SessionStatus.finished && ref.read(settingsProvider).sendMode == SendMode.single) {
+    if (sessionState.status == SessionStatus.finished &&
+        ref.read(settingsProvider).sendMode == SendMode.single) {
       // clear selected files
       ref.redux(selectedSendingFilesProvider).dispatch(ClearSelectionAction());
     }
@@ -605,10 +702,7 @@ extension on Map<String, SendSessionState> {
       // no change
       return this;
     }
-    return {
-      ...this,
-      sessionId: newState,
-    };
+    return {...this, sessionId: newState};
   }
 
   Map<String, SendSessionState> removeSession(Ref ref, String sessionId) {
@@ -618,15 +712,16 @@ extension on Map<String, SendSessionState> {
 }
 
 extension on SendSessionState {
-  SendSessionState withFileStatus(String fileId, FileStatus status, String? errorMessage) {
+  SendSessionState withFileStatus(
+    String fileId,
+    FileStatus status,
+    String? errorMessage,
+  ) {
     return copyWith(
       files: {...files}
         ..update(
           fileId,
-          (file) => file.copyWith(
-            status: status,
-            errorMessage: errorMessage,
-          ),
+          (file) => file.copyWith(status: status, errorMessage: errorMessage),
         ),
     );
   }
@@ -636,7 +731,10 @@ extension on Object {
   String get humanErrorMessage {
     final e = this;
     final (statusCode, message) = switch (this) {
-      RhttpStatusCodeException(:final statusCode, :final body) => (statusCode, _parseErrorMessage(body)),
+      RhttpStatusCodeException(:final statusCode, :final body) => (
+        statusCode,
+        _parseErrorMessage(body),
+      ),
       _ => (null, e.toString()),
     };
 

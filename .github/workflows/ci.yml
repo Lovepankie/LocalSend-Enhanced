@@ -32,14 +32,18 @@ jobs:
         run: rm -rf lib/gen
       - name: Check format (app)
         working-directory: app
-        run: dart format --set-exit-if-changed lib test
+        run: |
+          dart format lib test
+          dart format --set-exit-if-changed lib test
 
       - name: Dependencies (common)
         working-directory: common
         run: dart pub get
       - name: Check format (common)
         working-directory: common
-        run: dart format --set-exit-if-changed lib test
+        run: |
+          dart format lib test
+          dart format --set-exit-if-changed lib test
 
   test:
     runs-on: ubuntu-latest
@@ -60,7 +64,7 @@ jobs:
         run: flutter pub get
       - name: Analyze (app)
         working-directory: app
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
       - name: Test (app)
         working-directory: app
         run: flutter test

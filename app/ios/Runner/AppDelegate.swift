@@ -24,6 +24,11 @@ import Flutter
     }
 
     GeneratedPluginRegistrant.register(with: self)
+
+    // Register WiFi Direct / hotspot join plugin
+    let registrar = self.registrar(forPlugin: "WifiDirectPlugin")!
+    WifiDirectPlugin.register(with: registrar)
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
