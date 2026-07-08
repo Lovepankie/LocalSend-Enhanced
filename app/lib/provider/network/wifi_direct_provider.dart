@@ -1,4 +1,6 @@
+import 'package:localsend_app/model/persistence/favorite_device.dart';
 import 'package:localsend_app/provider/direct/direct_pairing.dart';
+import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/service/wifi_direct_service.dart';
 import 'package:localsend_app/service/wifi_direct_service_factory.dart';
@@ -90,7 +92,8 @@ class WifiDirectNotifier extends Notifier<WifiDirectState> {
     state = WifiDirectState.idle;
   }
 
-  /// Joins a hotspot described by a scanned pairing payload.
+  /// Joins a hotspot described by a scanned pairing payload, then registers the
+  /// host directly (multicast discovery is unreliable on a local-only hotspot).
   Future<void> joinFromPairing(PairingPayload pairing) async {
     await joinHotspot(
       HotspotCredentials(
@@ -99,6 +102,31 @@ class WifiDirectNotifier extends Notifier<WifiDirectState> {
         hostIp: pairing.host,
       ),
     );
+    if (state.mode == WifiDirectMode.connected && pairing.canConnectDirectly) {
+      await _registerHost(pairing);
+    }
+  }
+
+  /// Directly probes and registers the host at its known IP:port. LocalSend's
+  /// discovery is mutual, so the host also learns about this device — both then
+  /// appear in each other's device lists and the normal send flow works.
+  Future<void> _registerHost(PairingPayload pairing) async {
+    try {
+      final host = FavoriteDevice.fromValues(
+        fingerprint: pairing.fingerprint ?? '',
+        ip: pairing.host!,
+        port: pairing.port!,
+        alias: 'Direct Host',
+      );
+      await ref.redux(nearbyDevicesProvider).dispatchAsync(
+            StartFavoriteScan(
+              devices: [host],
+              https: pairing.protocol == 'https',
+            ),
+          );
+    } catch (_) {
+      // Best-effort: the peer may still surface via standard discovery.
+    }
   }
 
   /// Joins a hotspot from credentials (scanned or entered manually).
