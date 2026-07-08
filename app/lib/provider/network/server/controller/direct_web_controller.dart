@@ -1,13 +1,18 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:common/model/file_type.dart';
 import 'package:localsend_app/provider/device_info_provider.dart';
 import 'package:localsend_app/provider/network/server/server_utils.dart';
+import 'package:localsend_app/provider/receive_history_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/util/native/directories.dart';
 import 'package:localsend_app/util/native/file_saver.dart';
 import 'package:localsend_app/util/simple_server.dart';
 import 'package:mime/mime.dart';
+import 'package:uuid/uuid.dart';
+
+const _uuid = Uuid();
 
 /// Serves a self-contained, no-app browser page that lets a computer joined to
 /// the host's hotspot UPLOAD files to the phone (PC -> phone). The download
@@ -68,16 +73,32 @@ class DirectWebController {
           continue;
         }
 
-        await saveFile(
+        var savedBytes = 0;
+        final (savedToGallery, filePath) = await saveFile(
           destinationDirectory: destinationDir,
           fileName: fileName,
           saveToGallery: false,
           isImage: false,
           stream: part.map((chunk) => Uint8List.fromList(chunk)),
-          onProgress: (_) {},
+          onProgress: (b) => savedBytes = b,
           createdDirectories: createdDirectories,
           androidSdkInt: androidSdkInt,
         );
+
+        // Record the browser upload in history like any other received file.
+        await server.ref.redux(receiveHistoryProvider).dispatchAsync(
+              AddHistoryEntryAction(
+                entryId: _uuid.v4(),
+                fileName: fileName,
+                fileType: _guessFileType(fileName),
+                path: filePath,
+                savedToGallery: savedToGallery,
+                isMessage: false,
+                fileSize: savedBytes,
+                senderAlias: 'Browser',
+                timestamp: DateTime.now().toUtc(),
+              ),
+            );
         savedCount++;
       }
     } catch (e) {
@@ -91,6 +112,19 @@ class DirectWebController {
     // content-disposition: form-data; name="file"; filename="photo.jpg"
     final match = RegExp('filename="([^"]*)"').firstMatch(disposition);
     return match?.group(1);
+  }
+
+  FileType _guessFileType(String name) {
+    final parts = name.toLowerCase().split('.');
+    final ext = parts.length > 1 ? parts.last : '';
+    const images = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic'};
+    const videos = {'mp4', 'mkv', 'mov', 'avi', 'webm', '3gp'};
+    if (images.contains(ext)) return FileType.image;
+    if (videos.contains(ext)) return FileType.video;
+    if (ext == 'pdf') return FileType.pdf;
+    if (ext == 'apk') return FileType.apk;
+    if (ext == 'txt') return FileType.text;
+    return FileType.other;
   }
 }
 
