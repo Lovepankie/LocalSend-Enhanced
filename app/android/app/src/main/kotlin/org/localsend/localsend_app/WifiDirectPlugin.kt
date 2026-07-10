@@ -14,6 +14,8 @@ import androidx.annotation.RequiresApi
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.net.Inet4Address
+import java.net.NetworkInterface
 
 private const val CHANNEL = "localsend/wifi_direct"
 
@@ -72,8 +74,14 @@ object WifiDirectPlugin {
                     ?: reservation.softApConfiguration?.passphrase
 
                 if (ssid != null && pass != null) {
-                    Handler(Looper.getMainLooper()).post {
-                        result.success(mapOf("ssid" to ssid, "passphrase" to pass))
+                    // The AP interface may take a moment to acquire its address,
+                    // so resolve the host IP with a short retry before replying.
+                    resolveHotspotIpWithRetry(3) { hostIp ->
+                        Handler(Looper.getMainLooper()).post {
+                            val payload = mutableMapOf("ssid" to ssid, "passphrase" to pass)
+                            if (hostIp != null) payload["host"] = hostIp
+                            result.success(payload)
+                        }
                     }
                 } else {
                     Handler(Looper.getMainLooper()).post {
@@ -95,6 +103,46 @@ object WifiDirectPlugin {
 
         hotspotCallback = callback
         wifiManager.startLocalOnlyHotspot(callback, Handler(Looper.getMainLooper()))
+    }
+
+    /**
+     * Resolves the host's own IPv4 on the local-only hotspot (SoftAP) interface.
+     * Prefers AP-like interfaces (ap, swlan, softap, wlan1, p2p); otherwise falls
+     * back to any non-loopback site-local IPv4. Retries because the AP interface
+     * may not have its address immediately after the hotspot starts.
+     */
+    private fun resolveHotspotIpWithRetry(attemptsLeft: Int, callback: (String?) -> Unit) {
+        val ip = resolveHotspotIp()
+        if (ip != null || attemptsLeft <= 0) {
+            callback(ip)
+        } else {
+            Handler(Looper.getMainLooper()).postDelayed({
+                resolveHotspotIpWithRetry(attemptsLeft - 1, callback)
+            }, 500)
+        }
+    }
+
+    private fun resolveHotspotIp(): String? {
+        return try {
+            val interfaces = NetworkInterface.getNetworkInterfaces() ?: return null
+            var fallback: String? = null
+            for (intf in interfaces) {
+                if (!intf.isUp || intf.isLoopback) continue
+                val name = intf.name.lowercase()
+                val isApLike = name.startsWith("ap") || name.startsWith("swlan") ||
+                    name.startsWith("softap") || name == "wlan1" || name.contains("p2p")
+                for (addr in intf.inetAddresses) {
+                    if (addr is Inet4Address && !addr.isLoopbackAddress && addr.isSiteLocalAddress) {
+                        val host = addr.hostAddress ?: continue
+                        if (isApLike) return host
+                        if (fallback == null) fallback = host
+                    }
+                }
+            }
+            fallback
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private fun handleStopHotspot(result: MethodChannel.Result) {

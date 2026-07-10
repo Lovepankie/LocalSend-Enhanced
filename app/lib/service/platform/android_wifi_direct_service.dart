@@ -27,6 +27,7 @@ class AndroidWifiDirectService implements WifiDirectService {
         ssid: result['ssid']!,
         passphrase: result['passphrase']!,
         bssid: result['bssid'],
+        hostIp: result['host'],
       );
     } on PlatformException catch (e) {
       throw WifiDirectException('Failed to start hotspot: ${e.message}');

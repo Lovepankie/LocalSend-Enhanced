@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:localsend_app/provider/direct/direct_pairing.dart';
+import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
 import 'package:localsend_app/provider/network/wifi_direct_provider.dart';
+import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/service/wifi_direct_service.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 
@@ -57,7 +61,10 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (state.mode) {
       WifiDirectMode.idle => _IdleView(canHost: canHost),
-      WifiDirectMode.hosting => _HostingView(credentials: state.credentials),
+      WifiDirectMode.hosting => _HostingView(
+          pairing: state.pairing,
+          credentials: state.credentials,
+        ),
       WifiDirectMode.joining => const _JoiningView(),
       WifiDirectMode.connected => const _ConnectedView(),
     };
@@ -142,9 +149,10 @@ class _IdleView extends StatelessWidget {
 
 /// Shows the QR code for the hosted hotspot.
 class _HostingView extends StatelessWidget {
+  final PairingPayload? pairing;
   final HotspotCredentials? credentials;
 
-  const _HostingView({this.credentials});
+  const _HostingView({this.pairing, this.credentials});
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +160,11 @@ class _HostingView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final payload = credentials!.toQrPayload();
+    // Primary payload is the lsd:// pairing URI (carries host IP + port so the
+    // guest connects directly); fall back to the plain WiFi QR if the host IP
+    // could not be resolved.
+    final payload = pairing?.toUri() ?? credentials!.toQrPayload();
+    final webUrl = pairing?.baseUrl;
 
     return Center(
       child: Padding(
@@ -186,15 +198,71 @@ class _HostingView extends StatelessWidget {
             const SizedBox(height: 20),
             _CredentialRow(label: 'Network', value: credentials!.ssid),
             _CredentialRow(label: 'Password', value: credentials!.passphrase),
+            if (webUrl != null) ...[
+              const SizedBox(height: 8),
+              _CredentialRow(label: 'Browser', value: '$webUrl/direct'),
+              Text(
+                'On a computer: join this network, then open the address above '
+                'in any browser to send files here — no app needed.',
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               'Once connected, LocalSend will discover devices automatically.',
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),
+            const _GroupSendSection(),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Group send (US3): shows connected-device count and a "send to all" action
+/// that fans out the current file selection to every connected device.
+class _GroupSendSection extends StatelessWidget {
+  const _GroupSendSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final count = context.watch(nearbyDevicesProvider).allDevices.length;
+    final files = context.watch(selectedSendingFilesProvider);
+    if (count == 0) {
+      return const SizedBox.shrink();
+    }
+    final plural = count == 1 ? '' : 's';
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        const Divider(),
+        const SizedBox(height: 8),
+        Text('$count device$plural connected'),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: files.isEmpty
+              ? null
+              : () async {
+                  await context
+                      .notifier(wifiDirectProvider)
+                      .sendToAllConnected(files);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Sending to $count device$plural…')),
+                    );
+                  }
+                },
+          icon: const Icon(Icons.send),
+          label: Text(
+            files.isEmpty
+                ? 'Pick files in the Send tab first'
+                : 'Send ${files.length} file${files.length == 1 ? '' : 's'} to all',
+          ),
+        ),
+      ],
     );
   }
 }
@@ -290,35 +358,75 @@ class _QrScannerPage extends StatefulWidget {
 }
 
 class _QrScannerPageState extends State<_QrScannerPage> {
+  final MobileScannerController _controller = MobileScannerController();
   bool _processing = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRaw(String raw) async {
+    if (_processing) return;
+    final pairing = PairingPayload.tryParse(raw);
+    if (pairing == null) return; // not one of our QR codes
+    setState(() => _processing = true);
+    await _controller.stop();
+    if (!mounted) return;
+    await context.notifier(wifiDirectProvider).joinFromPairing(pairing);
+    if (mounted) Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Scan QR Code')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.qr_code_scanner, size: 80),
-              const SizedBox(height: 16),
-              Text(
-                'Scan the QR code shown on the host device.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 32),
-              // Manual entry fallback (QR scanner package integration
-              // requires mobile_scanner or similar — wired up at build time)
-              _ManualEntryForm(
-                onCredentials: _onCredentials,
-                processing: _processing,
-              ),
-            ],
+      body: Column(
+        children: [
+          SizedBox(
+            height: 300,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                MobileScanner(
+                  controller: _controller,
+                  onDetect: (capture) {
+                    for (final barcode in capture.barcodes) {
+                      final raw = barcode.rawValue;
+                      if (raw != null) {
+                        _handleRaw(raw);
+                        break;
+                      }
+                    }
+                  },
+                ),
+                if (_processing) const CircularProgressIndicator(),
+              ],
+            ),
           ),
-        ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Point the camera at the host device\'s QR code, '
+                    'or enter the network details manually below.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 24),
+                  _ManualEntryForm(
+                    onCredentials: _onCredentials,
+                    processing: _processing,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

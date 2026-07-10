@@ -13,7 +13,37 @@ Fork of LocalSend with 6 improvement phases for RincolTech Solutions. Enhanced l
 ## Repo
 `https://github.com/RincolTech-Solutions-ltd/LocalSend-Enhanced`
 
-## Current Branch / Status
+## Active Feature — Direct Mode (branch `001-direct-transfer`, PR #11)
+Xender/SHAREit-class offline hotspot transfer. SpecKit-driven
+(`specs/001-direct-transfer/`: spec, plan, research, data-model, contracts,
+tasks). Status as of 2026-07-08: US1-US5 implemented (resume deferred), all
+CI-green, final test APK building.
+
+- **US1** offline phone↔phone: `WifiDirectPlugin.kt` returns SoftAP host IP +
+  binds guest traffic (`bindProcessToNetwork`); host QR is `lsd://` pairing
+  payload (host IP+port+token); guest scans (`mobile_scanner`) → joins → binds →
+  registers host directly via `StartFavoriteScan` (multicast unreliable on
+  local-only hotspot). `PairingPayload` codec in `provider/direct/`.
+- **US2** no-app PC: `DirectWebController` serves `GET /direct` (browser upload
+  page) + `POST /direct/upload` (multipart→saveFile). Download side pre-existed.
+- **US3** group send: `WifiDirectNotifier.sendToAllConnected()` fan-out,
+  failure-isolated; "Send to all" button in host view.
+- **US4** folders/albums/apps: work via existing send flow once connected.
+- **US5** history: browser uploads recorded via `AddHistoryEntryAction`;
+  app-to-app already recorded. **Resume (byte-offset) deferred** — needs
+  on-device testing.
+- **Key files**: `provider/network/wifi_direct_provider.dart`,
+  `pages/wifi_direct/wifi_direct_page.dart`, `provider/direct/direct_pairing.dart`,
+  `provider/network/server/controller/direct_web_controller.dart`,
+  `android/.../WifiDirectPlugin.kt`.
+- **CI gap learned**: PR CI (dart analyze/test) does NOT compile Kotlin or build
+  the APK — native bugs only surface in the Build Artifacts (APK) workflow. Run
+  an APK build to validate any native/Kotlin change. (A KDoc `*/` bug slipped
+  past PR CI and was caught by the APK build.)
+- **Next**: on-device test on two phones → then merge to main + tag
+  `enhanced-v1.1.0`. Deferred: transfer resume, iOS host.
+
+## Shipped Status (main)
 **Branch:** `main`
 **Status:** SHIPPED — all 6 phases merged to main, plugin hooks fully wired, release tagged `enhanced-v1.0.0` (2026-07-08)
 - PR #7 — all 6 phases (staging → main)

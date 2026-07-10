@@ -2,6 +2,9 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Camera for scanning the host's pairing QR code (Direct Mode) -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <!-- WiFi Direct / Local-Only Hotspot -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
