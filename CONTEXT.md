@@ -13,11 +13,12 @@ Fork of LocalSend with 6 improvement phases for RincolTech Solutions. Enhanced l
 ## Repo
 `https://github.com/RincolTech-Solutions-ltd/LocalSend-Enhanced`
 
-## Active Feature — Direct Mode (branch `001-direct-transfer`, PR #11)
+## Direct Mode — SHIPPED as `enhanced-v1.1.0` (merged to main via PR #11)
 Xender/SHAREit-class offline hotspot transfer. SpecKit-driven
 (`specs/001-direct-transfer/`: spec, plan, research, data-model, contracts,
-tasks). Status as of 2026-07-08: US1-US5 implemented (resume deferred), all
-CI-green, final test APK building.
+tasks). US1-US5 implemented (resume deferred), all CI-green + APK-validated,
+merged to `main`, released as `enhanced-v1.1.0`. Not yet device-tested — first
+on-device validation pending; patch + re-tag if the hotspot flow needs tuning.
 
 - **US1** offline phone↔phone: `WifiDirectPlugin.kt` returns SoftAP host IP +
   binds guest traffic (`bindProcessToNetwork`); host QR is `lsd://` pairing
