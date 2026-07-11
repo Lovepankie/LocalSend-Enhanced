@@ -5,6 +5,10 @@
     <!-- Camera for scanning the host's pairing QR code (Direct Mode) -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
+    <!-- All-files access so a PC can browse the phone's storage over Direct Mode -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage"/>
+
     <!-- WiFi Direct / Local-Only Hotspot -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>

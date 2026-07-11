@@ -35,6 +35,15 @@ class DirectWebController {
       await request.response.close();
     });
 
+    // Browse the phone's shared storage from a PC browser and download files.
+    // Requires "All files access" (MANAGE_EXTERNAL_STORAGE) granted on Android.
+    router.get('/files', (HttpRequest request) async {
+      await _handleBrowse(request);
+    });
+    router.get('/files/download', (HttpRequest request) async {
+      await _handleDownload(request);
+    });
+
     router.post('/direct/upload', (HttpRequest request) async {
       await _handleUpload(request);
     });
@@ -108,6 +117,154 @@ class DirectWebController {
     return request.respondJson(200, body: {'saved': savedCount});
   }
 
+  // Root of the phone's shared storage that the PC may browse.
+  static const _browseRoot = '/storage/emulated/0';
+
+  /// Returns the decoded path only if it stays within [_browseRoot] (no `..`
+  /// traversal), else null.
+  String? _safePath(String raw) {
+    final decoded = Uri.decodeComponent(raw).replaceAll('\\', '/');
+    if (decoded.split('/').contains('..')) return null;
+    if (decoded != _browseRoot && !decoded.startsWith('$_browseRoot/')) {
+      return null;
+    }
+    return decoded;
+  }
+
+  Future<void> _handleBrowse(HttpRequest request) async {
+    final raw = request.uri.queryParameters['path'] ?? _browseRoot;
+    final path = _safePath(raw);
+    if (path == null) {
+      return request.respondJson(403, message: 'Path not allowed.');
+    }
+    final dir = Directory(path);
+    String html;
+    if (!await dir.exists()) {
+      html = _browsePage(path, const [],
+          'Folder not found or not accessible. Grant "All files access" to the '
+          'app to browse the phone\'s storage.');
+    } else {
+      try {
+        final entries = <FileSystemEntity>[];
+        await for (final e in dir.list(followLinks: false)) {
+          entries.add(e);
+        }
+        entries.sort((a, b) {
+          final ad = a is Directory;
+          final bd = b is Directory;
+          if (ad != bd) return ad ? -1 : 1;
+          return a.path.toLowerCase().compareTo(b.path.toLowerCase());
+        });
+        html = _browsePage(path, entries, null);
+      } catch (e) {
+        html = _browsePage(path, const [],
+            'Cannot read this folder. You may need to grant "All files access" '
+            'in the app settings. ($e)');
+      }
+    }
+    request.response
+      ..statusCode = 200
+      ..headers.contentType = ContentType.html
+      ..write(html);
+    await request.response.close();
+  }
+
+  Future<void> _handleDownload(HttpRequest request) async {
+    final raw = request.uri.queryParameters['path'];
+    final path = raw == null ? null : _safePath(raw);
+    if (path == null) {
+      return request.respondJson(403, message: 'Path not allowed.');
+    }
+    final file = File(path);
+    if (!await file.exists()) {
+      return request.respondJson(404, message: 'File not found.');
+    }
+    final name = path.split('/').last;
+    request.response
+      ..statusCode = 200
+      ..headers.contentType = ContentType.binary
+      ..headers.set('Content-Length', (await file.length()).toString())
+      ..headers.set('Content-Disposition', 'attachment; filename="$name"');
+    await request.response.addStream(file.openRead());
+    await request.response.close();
+  }
+
+  String _browsePage(
+    String path,
+    List<FileSystemEntity> entries,
+    String? error,
+  ) {
+    String esc(String s) => s
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    String href(String p) => Uri.encodeComponent(p);
+
+    final rows = StringBuffer();
+    if (path != _browseRoot) {
+      final parent = path.substring(0, path.lastIndexOf('/'));
+      final up = parent.isEmpty ? _browseRoot : parent;
+      rows.write('<a class="row up" href="/files?path=${href(up)}">⬆ ..</a>');
+    }
+    for (final e in entries) {
+      final name = e.path.split('/').last;
+      if (e is Directory) {
+        rows.write('<a class="row dir" href="/files?path=${href(e.path)}">'
+            '📁 ${esc(name)}</a>');
+      } else {
+        var size = 0;
+        try {
+          size = (e as File).lengthSync();
+        } catch (_) {}
+        rows.write('<a class="row file" href="/files/download?path=${href(e.path)}">'
+            '📄 ${esc(name)}<span class="sz">${_fmtSize(size)}</span></a>');
+      }
+    }
+
+    final errBlock = error == null
+        ? ''
+        : '<div class="err">${esc(error)}</div>';
+    final display = path.replaceFirst(_browseRoot, 'Phone storage');
+    return '''
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browse phone</title>
+<style>
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0D1B3E;
+    color:#EEF4FF;margin:0;padding:0}
+  header{position:sticky;top:0;background:#18264a;padding:14px 18px;
+    box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  header h1{margin:0;font-size:16px;font-weight:600}
+  header .path{color:#A0B0C8;font-size:12px;margin-top:3px;word-break:break-all}
+  .err{background:#3a2030;color:#ffb4b4;margin:14px 18px;padding:12px 14px;
+    border-radius:10px;font-size:13px}
+  .list{padding:8px 0}
+  .row{display:flex;align-items:center;gap:10px;padding:13px 18px;color:#EEF4FF;
+    text-decoration:none;border-bottom:1px solid #1d2c54;font-size:15px}
+  .row:hover{background:#16244a}
+  .row.up{color:#A0B0C8}
+  .sz{margin-left:auto;color:#7f90ad;font-size:12px}
+</style></head><body>
+<header><h1>Browse phone</h1><div class="path">$display</div></header>
+$errBlock
+<div class="list">$rows</div>
+</body></html>''';
+  }
+
+  String _fmtSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    double s = bytes / 1024;
+    var i = 0;
+    while (s >= 1024 && i < units.length - 1) {
+      s /= 1024;
+      i++;
+    }
+    return '${s.toStringAsFixed(s >= 10 ? 0 : 1)} ${units[i]}';
+  }
+
   String? _filenameFromDisposition(String disposition) {
     // content-disposition: form-data; name="file"; filename="photo.jpg"
     final match = RegExp('filename="([^"]*)"').firstMatch(disposition);
@@ -161,6 +318,7 @@ const _uploadPageHtml = r'''
     <h1>Send to phone</h1>
     <p>Drop files here or choose them. They go straight to the phone over this
        direct connection — no app, no internet.</p>
+    <p><a href="/files" style="color:#1A73E8;text-decoration:none">📁 Browse &amp; download files from the phone →</a></p>
     <label class="drop" id="drop">
       <input type="file" id="file" multiple>
       <div>Drag files here or <strong>browse</strong></div>
