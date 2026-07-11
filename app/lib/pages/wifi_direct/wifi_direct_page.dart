@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localsend_app/provider/direct/direct_pairing.dart';
+import 'package:localsend_app/provider/direct/granted_folder_provider.dart';
 import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
 import 'package:localsend_app/provider/network/wifi_direct_provider.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
@@ -212,6 +213,7 @@ class _HostingView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const _AllFilesAccessButton(),
+              const _GrantFolderButton(),
             ],
             const SizedBox(height: 8),
             Text(
@@ -266,6 +268,39 @@ class _AllFilesAccessButtonState extends State<_AllFilesAccessButton> {
       },
       icon: const Icon(Icons.folder_open),
       label: const Text('Enable file browsing (All files access)'),
+    );
+  }
+}
+
+/// Alternative to All-files access: grant a single folder (Android SAF) that a
+/// PC may browse and download from.
+class _GrantFolderButton extends StatelessWidget {
+  const _GrantFolderButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final granted = context.watch(grantedFolderProvider);
+    if (granted != null) {
+      return Column(
+        children: [
+          const SizedBox(height: 4),
+          Text(
+            'Shared folder granted — ${granted.files.length} file'
+            '${granted.files.length == 1 ? '' : 's'} visible on /files',
+            style: Theme.of(context).textTheme.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+          TextButton(
+            onPressed: () => context.notifier(grantedFolderProvider).revoke(),
+            child: const Text('Stop sharing folder'),
+          ),
+        ],
+      );
+    }
+    return TextButton.icon(
+      onPressed: () => context.notifier(grantedFolderProvider).grant(),
+      icon: const Icon(Icons.folder_shared, size: 18),
+      label: const Text('…or share just one folder'),
     );
   }
 }

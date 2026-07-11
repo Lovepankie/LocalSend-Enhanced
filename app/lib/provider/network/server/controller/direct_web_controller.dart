@@ -1,15 +1,19 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:common/model/file_type.dart';
 import 'package:localsend_app/provider/device_info_provider.dart';
+import 'package:localsend_app/provider/direct/granted_folder_provider.dart';
 import 'package:localsend_app/provider/network/server/server_utils.dart';
 import 'package:localsend_app/provider/receive_history_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/util/native/channel/android_channel.dart';
 import 'package:localsend_app/util/native/directories.dart';
 import 'package:localsend_app/util/native/file_saver.dart';
 import 'package:localsend_app/util/simple_server.dart';
 import 'package:mime/mime.dart';
+import 'package:uri_content/uri_content.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -42,6 +46,10 @@ class DirectWebController {
     });
     router.get('/files/download', (HttpRequest request) async {
       await _handleDownload(request);
+    });
+    // Download a file from the user-granted (SAF) folder by its content URI.
+    router.get('/files/uri', (HttpRequest request) async {
+      await _handleUriDownload(request);
     });
 
     router.post('/direct/upload', (HttpRequest request) async {
@@ -137,12 +145,20 @@ class DirectWebController {
     if (path == null) {
       return request.respondJson(403, message: 'Path not allowed.');
     }
+    // Files from a user-granted (SAF) folder are shown on the root page — they
+    // work even without "All files access".
+    final granted = path == _browseRoot
+        ? server.ref.read(grantedFolderProvider)?.files
+        : null;
+
     final dir = Directory(path);
     String html;
     if (!await dir.exists()) {
       html = _browsePage(path, const [],
-          'Folder not found or not accessible. Grant "All files access" to the '
-          'app to browse the phone\'s storage.');
+          'Full-storage browsing is unavailable. Either grant "All files '
+          'access" in the app, or grant a single folder from the app\'s Direct '
+          'screen — granted folders appear below.',
+          granted);
     } else {
       try {
         final entries = <FileSystemEntity>[];
@@ -155,11 +171,12 @@ class DirectWebController {
           if (ad != bd) return ad ? -1 : 1;
           return a.path.toLowerCase().compareTo(b.path.toLowerCase());
         });
-        html = _browsePage(path, entries, null);
+        html = _browsePage(path, entries, null, granted);
       } catch (e) {
         html = _browsePage(path, const [],
-            'Cannot read this folder. You may need to grant "All files access" '
-            'in the app settings. ($e)');
+            'Cannot read this folder. Grant "All files access" in the app, or '
+            'grant a single folder — granted folders appear below. ($e)',
+            granted);
       }
     }
     request.response
@@ -167,6 +184,37 @@ class DirectWebController {
       ..headers.contentType = ContentType.html
       ..write(html);
     await request.response.close();
+  }
+
+  /// Streams a file from the user-granted SAF folder. Only URIs present in the
+  /// granted listing are served — an arbitrary content:// URI is rejected.
+  Future<void> _handleUriDownload(HttpRequest request) async {
+    final raw = request.uri.queryParameters['u'];
+    if (raw == null) {
+      return request.respondJson(400, message: 'Missing uri.');
+    }
+    final wanted = Uri.decodeComponent(raw);
+    final granted = server.ref.read(grantedFolderProvider);
+    final match = granted?.files.firstWhereOrNull((f) => f.uri == wanted);
+    if (match == null) {
+      return request.respondJson(403, message: 'File is not in a granted folder.');
+    }
+
+    try {
+      final stream = UriContent().getContentStream(Uri.parse(match.uri));
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = ContentType.binary
+        ..headers.set('Content-Length', match.size.toString())
+        ..headers.set(
+          'Content-Disposition',
+          'attachment; filename="${match.name}"',
+        );
+      await request.response.addStream(stream);
+      await request.response.close();
+    } catch (e) {
+      return request.respondJson(500, message: 'Could not read file: $e');
+    }
   }
 
   Future<void> _handleDownload(HttpRequest request) async {
@@ -192,8 +240,9 @@ class DirectWebController {
   String _browsePage(
     String path,
     List<FileSystemEntity> entries,
-    String? error,
-  ) {
+    String? error, [
+    List<FileInfo>? granted,
+  ]) {
     String esc(String s) => s
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
@@ -222,6 +271,19 @@ class DirectWebController {
       }
     }
 
+    // Files from a folder the user explicitly granted (works without
+    // "All files access").
+    final grantedBlock = StringBuffer();
+    if (granted != null && granted.isNotEmpty) {
+      grantedBlock.write('<div class="section">Shared folder (granted)</div>');
+      for (final f in granted) {
+        grantedBlock.write(
+          '<a class="row file" href="/files/uri?u=${href(f.uri)}">'
+          '📄 ${esc(f.name)}<span class="sz">${_fmtSize(f.size)}</span></a>',
+        );
+      }
+    }
+
     final errBlock = error == null
         ? ''
         : '<div class="err">${esc(error)}</div>';
@@ -246,10 +308,12 @@ class DirectWebController {
   .row:hover{background:#16244a}
   .row.up{color:#A0B0C8}
   .sz{margin-left:auto;color:#7f90ad;font-size:12px}
+  .section{padding:14px 18px 6px;color:#1A73E8;font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.6px}
 </style></head><body>
 <header><h1>Browse phone</h1><div class="path">$display</div></header>
 $errBlock
-<div class="list">$rows</div>
+<div class="list">$grantedBlock$rows</div>
 </body></html>''';
   }
 
