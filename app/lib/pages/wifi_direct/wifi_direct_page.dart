@@ -5,6 +5,7 @@ import 'package:localsend_app/provider/network/wifi_direct_provider.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/service/wifi_direct_service.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 
@@ -200,13 +201,17 @@ class _HostingView extends StatelessWidget {
             _CredentialRow(label: 'Password', value: credentials!.passphrase),
             if (webUrl != null) ...[
               const SizedBox(height: 8),
-              _CredentialRow(label: 'Browser', value: '$webUrl/direct'),
+              _CredentialRow(label: 'Send to phone', value: '$webUrl/direct'),
+              _CredentialRow(label: 'Browse phone', value: '$webUrl/files'),
               Text(
-                'On a computer: join this network, then open the address above '
-                'in any browser to send files here — no app needed.',
+                'On a computer: join this network, then open one of the '
+                'addresses above in any browser — /direct to send files here, '
+                '/files to browse and download from the phone. No app needed.',
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 8),
+              const _AllFilesAccessButton(),
             ],
             const SizedBox(height: 8),
             Text(
@@ -218,6 +223,49 @@ class _HostingView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Lets the host grant "All files access" so a PC can browse the phone's
+/// storage over the /files endpoint.
+class _AllFilesAccessButton extends StatefulWidget {
+  const _AllFilesAccessButton();
+
+  @override
+  State<_AllFilesAccessButton> createState() => _AllFilesAccessButtonState();
+}
+
+class _AllFilesAccessButtonState extends State<_AllFilesAccessButton> {
+  bool _granted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    final status = await Permission.manageExternalStorage.status;
+    if (mounted) setState(() => _granted = status.isGranted);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_granted) {
+      return Text(
+        'File browsing enabled — open the /files address on a computer.',
+        style: Theme.of(context).textTheme.bodySmall,
+        textAlign: TextAlign.center,
+      );
+    }
+    return OutlinedButton.icon(
+      onPressed: () async {
+        await Permission.manageExternalStorage.request();
+        await _check();
+      },
+      icon: const Icon(Icons.folder_open),
+      label: const Text('Enable file browsing (All files access)'),
     );
   }
 }
